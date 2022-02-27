@@ -17,12 +17,11 @@ const WRITE_BLOCKS_TO_DISK = true;
 const PRINT_FINAL_HASH = true;
 const PRINT_FINAL_HASH_IN_SUMMARY = true;
 
+let A0, B0, C0, D0, A1, B1, C1, D1;
 
 function newArray(length) {
   return new Array(length).fill(0);
 }
-
-const Hx = newArray(16);
 
 function memcpy(a, ai, b, bi, l){
   if(l !== 4) {
@@ -47,7 +46,7 @@ function G(x, y, z) {
 function H(x, y, z) {
   return (x ^ y ^ z) >>> 0;
 }
-function I(x, y, z) {
+function fI(x, y, z) {
   return (y ^ (x | ~z)) >>> 0;
 }
 
@@ -77,7 +76,7 @@ function HHx(a, b, c, d, x, s, ac) {
 }
 
 function IIx(a, b, c, d, x, s, ac) {
-  a = I(b, c, d) + a + x + ac;
+  a = fI(b, c, d) + a + x + ac;
   a = RL(a, s);
   return (a + b) >>> 0;
 }
@@ -959,73 +958,73 @@ function Block1() {
 
                 Q[49] =
                   Q[48] +
-                  RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244, 6);
+                  RL(fI(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244, 6);
 
                 if (bit(Q[47], 32) != bit(Q[49], 32)) continue;
 
                 Q[50] =
                   Q[49] +
-                  RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97, 10);
+                  RL(fI(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97, 10);
 
                 if (bit(Q[50], 32) != (bit(Q[48], 32) ^ 1)) continue;
 
                 Q[51] =
                   Q[50] +
-                  RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7, 15);
+                  RL(fI(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7, 15);
 
                 if (bit(Q[51], 32) != bit(Q[49], 32)) continue;
 
                 Q[52] =
                   Q[51] +
-                  RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039, 21);
+                  RL(fI(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039, 21);
 
                 if (bit(Q[52], 32) != bit(Q[50], 32)) continue;
 
                 Q[53] =
                   Q[52] +
-                  RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3, 6);
+                  RL(fI(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3, 6);
 
                 if (bit(Q[53], 32) != bit(Q[51], 32)) continue;
 
                 Q[54] =
                   Q[53] +
-                  RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92, 10);
+                  RL(fI(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92, 10);
 
                 if (bit(Q[54], 32) != bit(Q[52], 32)) continue;
 
                 Q[55] =
                   Q[54] +
-                  RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47d, 15);
+                  RL(fI(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47d, 15);
 
                 if (bit(Q[55], 32) != bit(Q[53], 32)) continue;
 
                 Q[56] =
                   Q[55] +
-                  RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1, 21);
+                  RL(fI(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1, 21);
 
                 if (bit(Q[56], 32) != bit(Q[54], 32)) continue;
 
                 Q[57] =
                   Q[56] +
-                  RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4f, 6);
+                  RL(fI(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4f, 6);
 
                 if (bit(Q[57], 32) != bit(Q[55], 32)) continue;
 
                 Q[58] =
                   Q[57] +
-                  RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0, 10);
+                  RL(fI(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0, 10);
 
                 if (bit(Q[58], 32) != bit(Q[56], 32)) continue;
 
                 Q[59] =
                   Q[58] +
-                  RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314, 15);
+                  RL(fI(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314, 15);
 
                 if (bit(Q[59], 32) != bit(Q[57], 32)) continue;
 
                 Q[60] =
                   Q[59] +
-                  RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1, 21);
+                  RL(fI(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1, 21);
 
                 if (bit(Q[60], 26) != 0) continue;
 
@@ -1033,7 +1032,7 @@ function Block1() {
 
                 Q[61] =
                   Q[60] +
-                  RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82, 6);
+                  RL(fI(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82, 6);
 
                 if (bit(Q[61], 26) != 1) continue;
 
@@ -1041,17 +1040,17 @@ function Block1() {
 
                 // Extra conditions: Σ62,16 ~ Σ62,22 not all ones
                 // 0x003f8000 = 0000  0000  0011  1111  1000  0000  0000  0000
-                sigma_Q62 = I(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
+                sigma_Q62 = fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
                 if ((sigma_Q62 & 0x003f8000) == 0x003f8000) continue;
 
                 Q[62] = Q[61] + RL(sigma_Q62, 10);
 
                 Q[63] =
                   Q[62] +
-                  RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
+                  RL(fI(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
                 Q[64] =
                   Q[63] +
-                  RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
+                  RL(fI(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
 
                 // We add the initial vector to obtain the Intermediate Hash
                 // Values of the current block
@@ -1149,17 +1148,28 @@ function Block1() {
   return -1; // Collision not found;
 }
 
+x =  [
+    2386897597, 1168217658,
+    3647310400,  723682730,
+    1508832388,  787886709,
+    1906836187,   55573305,
+      87305429, 1112838661,
+    2025367023, 3592506182,
+    1147523825, 1614409171,
+    1821650250, 4021943629
+]
+
 
 function Block2() {
 
   let Q = newArray(65);
   let x = newArray(16);
-  let QM0, QM1, QM2, QM3;
-  let i, itr_q16, itr_q1q2, itr_q9, itr_q4, tmp_q1, tmp_q2, tmp_q4, tmp_q9;
-  let I, not_I;
-  let sigma_Q17, sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
-  let Q1_fix, Q2_fix, mask_Q1Q2, Q1Q2_strength;
-  let AA0, BB0, CC0, DD0, AA1, BB1, CC1, DD1;
+  let QM0=0, QM1=0, QM2=0, QM3=0;
+  let i=0, itr_q16=0, itr_q1q2=0, itr_q9=0, itr_q4=0, tmp_q1=0, tmp_q2=0, tmp_q4=0, tmp_q9=0;
+  let I=0, not_I=0;
+  let sigma_Q17=0, sigma_Q19=0, sigma_Q20=0, sigma_Q23=0, sigma_Q35=0, sigma_Q62=0;
+  let Q1_fix=0, Q2_fix=0, mask_Q1Q2=0, Q1Q2_strength=0;
+  let AA0=0, BB0=0, CC0=0, DD0=0, AA1=0, BB1=0, CC1=0, DD1=0;
 
   QM3 = A0;
   QM0 = B0;
@@ -1167,14 +1177,14 @@ function Block2() {
   QM2 = D0;
 
   // Mask generation for tunnel Q9 - 8 bits
-  int Q9_mask_bits[] = {3, 4, 5, 11, 19, 21, 22, 23};
-  int Q9_strength = 8;
-  const uint32_t *mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits);
+  const Q9_mask_bits = [ 3, 4, 5, 11, 19, 21, 22, 23 ];
+  const Q9_strength = 8;
+  const mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits);
 
   // Mask generation for MMMM Q4 - 6 bits
-  int Q4_mask_bits[] = {14, 15, 16, 23, 24, 25};
-  int Q4_strength = 6;
-  const uint32_t *mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
+  const Q4_mask_bits = [ 14, 15, 16, 23, 24, 25 ];
+  const Q4_strength = 6;
+  const mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
 
   // We extract the 32th bit of B0 and its
   I = QM0 & 0x80000000;
@@ -1182,7 +1192,7 @@ function Block2() {
 
   // Start block 2 generation.
   // TO-DO: add a time limit for collision search.
-  for (;;) {
+  for (let it = 0; it < 1000; it++) {
 
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
     // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7df
@@ -1324,7 +1334,7 @@ function Block2() {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    for (itr_q16 = 0; itr_q16 < pow(2, 25); itr_q16++) {
+    for (itr_q16 = 0; itr_q16 < Math.pow(2, 25); itr_q16++) {
 
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
@@ -1398,7 +1408,7 @@ function Block2() {
       ///                      MMMM Q1/Q2                          //
       ///////////////////////////////////////////////////////////////
       // MMMM Q1/Q2 - variable bits
-      for (itr_q1q2 = 0; itr_q1q2 < pow(2, Q1Q2_strength); itr_q1q2++) {
+      for (itr_q1q2 = 0; itr_q1q2 < Math.pow(2, Q1Q2_strength); itr_q1q2++) {
 
         Q[4] = tmp_q4;
         Q[9] = tmp_q9;
@@ -1474,7 +1484,7 @@ function Block2() {
         ///                         MMMM Q4                          //
         ///////////////////////////////////////////////////////////////
         // MMMM Q4 - 6 bits
-        for (itr_q4 = 0; itr_q4 < pow(2, 6); itr_q4++) {
+        for (itr_q4 = 0; itr_q4 < Math.pow(2, 6); itr_q4++) {
 
           Q[4] = tmp_q4 ^ mask_Q4[itr_q4];
 
@@ -1494,7 +1504,7 @@ function Block2() {
           ///                       Tunnel Q9                          //
           ///////////////////////////////////////////////////////////////
           // Tunnel Q9 - 8 bits
-          for (itr_q9 = 0; itr_q9 < (USE_B2_Q9 ? pow(2, Q9_strength) : 1);
+          for (itr_q9 = 0; itr_q9 < (USE_B2_Q9 ? Math.pow(2, Q9_strength) : 1);
                itr_q9++) {
 
             Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0];
@@ -1565,73 +1575,73 @@ function Block2() {
               continue;
 
             Q[49] = Q[48] +
-                    RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244, 6);
+                    RL(fI(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244, 6);
 
             if (bit(Q[49], 32) != bit(Q[47], 32))
               continue;
 
             Q[50] = Q[49] +
-                    RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97, 10);
+                    RL(fI(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97, 10);
 
             if (bit(Q[50], 32) != (bit(Q[48], 32) ^ 1))
               continue;
 
             Q[51] = Q[50] +
-                    RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7, 15);
+                    RL(fI(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7, 15);
 
             if (bit(Q[51], 32) != bit(Q[49], 32))
               continue;
 
             Q[52] = Q[51] +
-                    RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039, 21);
+                    RL(fI(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039, 21);
 
             if (bit(Q[52], 32) != bit(Q[50], 32))
               continue;
 
             Q[53] = Q[52] +
-                    RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3, 6);
+                    RL(fI(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3, 6);
 
             if (bit(Q[53], 32) != bit(Q[51], 32))
               continue;
 
             Q[54] = Q[53] +
-                    RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92, 10);
+                    RL(fI(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92, 10);
 
             if (bit(Q[54], 32) != bit(Q[52], 32))
               continue;
 
             Q[55] = Q[54] +
-                    RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47d, 15);
+                    RL(fI(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47d, 15);
 
             if (bit(Q[55], 32) != bit(Q[53], 32))
               continue;
 
             Q[56] = Q[55] +
-                    RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1, 21);
+                    RL(fI(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1, 21);
 
             if (bit(Q[56], 32) != bit(Q[54], 32))
               continue;
 
             Q[57] = Q[56] +
-                    RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4f, 6);
+                    RL(fI(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4f, 6);
 
             if (bit(Q[57], 32) != bit(Q[55], 32))
               continue;
 
             Q[58] = Q[57] +
-                    RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0, 10);
+                    RL(fI(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0, 10);
 
             if (bit(Q[58], 32) != bit(Q[56], 32))
               continue;
 
             Q[59] = Q[58] +
-                    RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314, 15);
+                    RL(fI(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314, 15);
 
             if (bit(Q[59], 32) != bit(Q[57], 32))
               continue;
 
             Q[60] = Q[59] +
-                    RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1, 21);
+                    RL(fI(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1, 21);
 
             if (bit(Q[60], 26) != 0)
               continue;
@@ -1640,7 +1650,7 @@ function Block2() {
               continue;
 
             Q[61] = Q[60] +
-                    RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82, 6);
+                    RL(fI(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82, 6);
 
             if (bit(Q[61], 26) != 1)
               continue;
@@ -1650,7 +1660,7 @@ function Block2() {
 
             // Extra conditions: Σ62,16 ~ Σ62,22 not all 0
             // 0x003f8000 =  0000 0000 0011 1111 1000 0000 0000 0000
-            sigma_Q62 = I(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
+            sigma_Q62 = fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
             if ((sigma_Q62 & 0x003f8000) == 0)
               continue;
 
@@ -1663,7 +1673,7 @@ function Block2() {
               continue;
 
             Q[63] = Q[62] +
-                    RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
+                    RL(fI(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
 
             if (bit(Q[63], 26) != 1)
               continue;
@@ -1672,7 +1682,7 @@ function Block2() {
               continue;
 
             Q[64] = Q[63] +
-                    RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
+                    RL(fI(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
 
             // Condition not necessary (Sasaki), try to remove
             if (bit(Q[64], 26) != 1)
@@ -1687,6 +1697,8 @@ function Block2() {
             CC0 = C0 + Q[63];
             DD0 = D0 + Q[62];
 
+            let obj = createMD5Object();
+            let {Hx} = obj;
             // Message 2 intermediate hash computation
             for (i = 0; i < 16; i++)
               Hx[i] = x[i];
@@ -1695,20 +1707,20 @@ function Block2() {
             Hx[11] = x[11] - 0x00008000;
             Hx[14] = x[14] - 0x80000000;
 
-            a = A1;
-            b = B1;
-            c = C1;
-            d = D1;
+            obj.a = A1>>>0;
+            obj.b = B1>>>0;
+            obj.c = C1>>>0;
+            obj.d = D1>>>0;
 
-            HMD5Tr();
+            obj = HMD5Tr(obj);
 
-            AA1 = A1 + a;
-            BB1 = B1 + b;
-            CC1 = C1 + c;
-            DD1 = D1 + d;
+            AA1 = (A1 + obj.a)>>>0;
+            BB1 = (B1 + obj.b)>>>0;
+            CC1 = (C1 + obj.c)>>>0;
+            DD1 = (D1 + obj.d)>>>0;
 
-            if (((AA1 - AA0) != 0) || ((BB1 - BB0) != 0) ||
-                ((CC1 - CC0) != 0) || ((DD1 - DD0) != 0))
+            if (((AA1 - AA0) >>> 0 != 0) || ((BB1 - BB0) >>> 0!= 0) ||
+              ((CC1 - CC0) >>> 0 != 0) || ((DD1 - DD0) >>> 0!= 0))
               continue;
 
             // We have now found a collision!!
@@ -1721,9 +1733,10 @@ function Block2() {
 
             // I save both second blocks
             for (i = 0; i < 16; i++) {
-              memcpy(&v1[64 + (i * 4)], &x[i], 4);
-              memcpy(&v2[64 + (i * 4)], &Hx[i], 4);
+              memcpy(v1, 64 + (i * 4), x, i, 4);
+              memcpy(v2, 64 + (i * 4), Hx, i, 4);
             }
+            console.log("Did shifting work correctly:", v1.slice(64, 128), x.map(i => i >>> 0));
 
             return (0);
 
@@ -1772,5 +1785,23 @@ if (Block1() == -1) {
   printf("\nCollision not found!\n");
 }
 console.timeEnd("Block1");
+console.time("Block2");
+if (Block2() == -1) {
+  printf("\nCollision not found!\n");
+}
+console.timeEnd("Block2");
 // printHx(obj.Hx);
 // console.log("Final", obj);
+//
+console.log('Colliding hash 0: ', A0.toString(16), B0.toString(16), C0.toString(16), D0.toString(16));
+console.log('Colliding hash 1: ', A1.toString(16), B1.toString(16), C1.toString(16), D1.toString(16));
+const a1 = document.createElement('a');
+const a2 = document.createElement('a');
+a1.innerHTML="File 1"
+a2.innerHTML="File 2"
+a1.download="f1.txt"
+a2.download="f2.txt"
+a1.href = window.URL.createObjectURL(new Blob([new Uint8Array(v1)]));
+a2.href = window.URL.createObjectURL(new Blob([new Uint8Array(v2)]));
+document.body.appendChild(a1)
+document.body.appendChild(a2)
