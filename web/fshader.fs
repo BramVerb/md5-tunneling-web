@@ -5,13 +5,15 @@ highp ivec2 pos;
 
 out highp vec4 color;
 
-#define USE_B1_Q4 1
-#define USE_B1_Q9 1
-#define USE_B1_Q10 1
-#define USE_B1_Q13 1
-#define USE_B1_Q14 1
-#define USE_B1_Q20 1
-#define USE_B2_Q9 1
+#define u32 highp uint
+
+#define USE_B1_Q4 true
+#define USE_B1_Q9 true
+#define USE_B1_Q10 true
+#define USE_B1_Q13 true
+#define USE_B1_Q14 true
+#define USE_B1_Q20 true
+#define USE_B2_Q9 true
 
 #define RL(x, n) (((x) << (n)) | ((x) >> (32u-(n))))
 #define RR(x, n) (((x) >> (n)) | ((x) << (32u-(n))))
@@ -46,9 +48,11 @@ out highp vec4 color;
  }
 
 
-uint a,b,c,d;
-uint Hx[16];
-uint IV1,IV2,IV3,IV4;
+u32 a,b,c,d;
+u32 Hx[16];
+u32 IV1,IV2,IV3,IV4;
+u32 A0,B0,C0,D0, A1,B1,C1,D1;
+
 
 void HMD5Tr() {
 
@@ -123,7 +127,7 @@ void HMD5Tr() {
 
 //Robert Jenkins' 32 bit integer hash function
 //Used to generate a good seed for rng()
-uint mix(uint a) {
+u32 mix(u32 a) {
    a = (a+0x7ed55d16u) + (a<<12);
    a = (a^0xc761c23cu) ^ (a>>19);
    a = (a+0x165667b1u) + (a<<5);
@@ -133,22 +137,29 @@ uint mix(uint a) {
    return a;
 }
 
+u32 pow2(u32 a) {
+    return 1u << a;
+}
+u32 pow2(int a) {
+    return 1u << a;
+}
+
 
 //Random number generator. We will use an LCG pseudo random generator. Different options are possible
-uint X;
-uint rng() {
+u32 X;
+u32 rng() {
   X = (1664525u*X + 1013904223u) & 0xffffffffu;
   //X = (1103515245*X + 12345) & 0xffffffffu;
   return X;
 }
 
-const highp uint mask_bit[33] = uint[]( 0x0u,
+const u32 mask_bit[33] = uint[]( 0x0u,
         0x00000001u,0x00000002u,0x00000004u,0x00000008u,0x00000010u,0x00000020u,0x00000040u,0x00000080u,
         0x00000100u,0x00000200u,0x00000400u,0x00000800u,0x00001000u,0x00002000u,0x00004000u,0x00008000u,
         0x00010000u,0x00020000u,0x00040000u,0x00080000u,0x00100000u,0x00200000u,0x00400000u,0x00800000u,
         0x01000000u,0x02000000u,0x04000000u,0x08000000u,0x10000000u,0x20000000u,0x40000000u,0x80000000u );
 
-uint bit(uint a, uint b) {
+u32 bit(u32 a, u32 b) {
     if ((b==0u) || (b > 32u))
       return 0u;
     else
@@ -158,16 +169,16 @@ uint bit(uint a, uint b) {
 
 
 
-/* uint * generate_mask(uint strength, uint * mask_bits) { */
+/* u32 * generate_mask(u32 strength, u32 * mask_bits) { */
 
-/*         uint mask_cardinality = (int32_t) pow(2, strength); */
+/*         u32 mask_cardinality = (int32_t) pow2( strength); */
 
-/*         uint * mask = calloc( mask_cardinality , sizeof(uint) ); */
+/*         u32 * mask = calloc( mask_cardinality , sizeof(u32) ); */
 
 /*         //If more or equal 32 bits tunneling is useless */
 /*         if (strength < 32) { */
 
-/*                 uint i,j; */
+/*                 u32 i,j; */
 
 /*                 for (i=0; i<mask_cardinality; i++) */
 /*                         for (j=0; j<strength; j++) */
@@ -183,47 +194,58 @@ uint bit(uint a, uint b) {
 /* } */
 
 
+u32 mask_Q(int strength, int[12] mask_bits, u32 i) {
+    u32 mask = 0u;
+    for (int j=0; j<strength; j++)
+        mask = mask ^ (((i >> j) & 1u) << (mask_bits[j]-1));
+    return mask;
+}
 
 int Block1() {
 
-  uint Q[65], x[16], QM0, QM1, QM2, QM3;
-  uint sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
-  uint i, itr_Q9, itr_Q4, itr_Q14, itr_Q13, itr_Q20, itr_Q10;
-  uint tmp_q3, tmp_q4, tmp_q13, tmp_q14, tmp_q20, tmp_q21, tmp_q9, tmp_q10;
-  uint tmp_x1, tmp_x15, tmp_x4;
-  uint Q3_fix, Q4_fix, Q14_fix, const_masked, const_unmasked;
-  uint AA0, BB0, CC0, DD0, AA1, BB1, CC1, DD1;
+  u32 Q[65], x[16], QM0, QM1, QM2, QM3;
+  u32 sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
+  u32 i, itr_Q9, itr_Q4, itr_Q14, itr_Q13, itr_Q20, itr_Q10;
+  u32 tmp_q3, tmp_q4, tmp_q13, tmp_q14, tmp_q20, tmp_q21, tmp_q9, tmp_q10;
+  u32 tmp_x1, tmp_x15, tmp_x4;
+  u32 Q3_fix, Q4_fix, Q14_fix, const_masked, const_unmasked;
+  u32 AA0, BB0, CC0, DD0, AA1, BB1, CC1, DD1;
 
 
   //Mask generation for tunnel Q4 - 1 bit
   int Q4_mask_bits[] = int[]( 26 );
   int Q4_strength = 1;
-  /* const uint * mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits); */
+  u32 mask_Q4[] = uint[](0u,33554432u);
+  /* const u32 * mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits); */
 
   //Mask generation for tunnel Q9 - 3 bits
   int Q9_mask_bits[] = int[]( 22, 23, 24 );
   int Q9_strength = 3;
-  /* const uint * mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits); */ 
+  /* const u32 * mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits); */ 
+  u32 mask_Q9[] = uint[](0u,2097152u,4194304u,6291456u,8388608u,10485760u,12582912u,14680064u);
 
   //Mask generation for tunnel Q13 - 12 bits
   int Q13_mask_bits[] = int[]( 2,3,5,7,10,11,12,21,22,23,28,29 );
   int Q13_strength = 12;
-  /* const uint * mask_Q13 = generate_mask(Q13_strength, Q13_mask_bits); */ 
+  /* const u32 * mask_Q13 = generate_mask(Q13_strength, Q13_mask_bits); */ 
 
   //Mask generation for tunnel Q20 - 6 bits
   int Q20_mask_bits[] = int[]( 1, 2, 10, 15, 22, 24 );
   int Q20_strength = 6;
-  /* const uint * mask_Q20 = generate_mask(Q20_strength, Q20_mask_bits); */ 
+  /* const u32 * mask_Q20 = generate_mask(Q20_strength, Q20_mask_bits); */ 
+  u32 mask_Q20[] = uint[]( 0u,1u,2u,3u,512u,513u,514u,515u,16384u,16385u,16386u,16387u,16896u,16897u,16898u,16899u,2097152u,2097153u,2097154u,2097155u,2097664u,2097665u,2097666u,2097667u,2113536u,2113537u,2113538u,2113539u,2114048u,2114049u,2114050u,2114051u,8388608u,8388609u,8388610u,8388611u,8389120u,8389121u,8389122u,8389123u,8404992u,8404993u,8404994u,8404995u,8405504u,8405505u,8405506u,8405507u,10485760u,10485761u,10485762u,10485763u,10486272u,10486273u,10486274u,10486275u,10502144u,10502145u,10502146u,10502147u,10502656u,10502657u,10502658u,10502659u);
 
   //Mask generation for tunnel Q10 - 3 bits
   int Q10_mask_bits[] = int[]( 11, 25, 27 );
   int Q10_strength = 3;
-  /* const uint * mask_Q10 = generate_mask(Q10_strength, Q10_mask_bits); */ 
+  /* const u32 * mask_Q10 = generate_mask(Q10_strength, Q10_mask_bits); */ 
+  u32 mask_Q10[] = uint[](0u,1024u,16777216u,16778240u,67108864u,67109888u,83886080u,83887104u);
 
   //Mask generation for tunnel Q14 - 9 bits
   int Q14_mask_bits[] = int[]( 1, 2, 3, 5, 6, 7, 27, 28, 29 );
   int Q14_strength = 9;
-  /* const uint * mask_Q14 = generate_mask(Q14_strength, Q14_mask_bits); */ 
+  /* const u32 * mask_Q14 = generate_mask(Q14_strength, Q14_mask_bits); */ 
+  u32 mask_Q14[] = uint[](0u,1u,2u,3u,4u,5u,6u,7u,16u,17u,18u,19u,20u,21u,22u,23u,32u,33u,34u,35u,36u,37u,38u,39u,48u,49u,50u,51u,52u,53u,54u,55u,64u,65u,66u,67u,68u,69u,70u,71u,80u,81u,82u,83u,84u,85u,86u,87u,96u,97u,98u,99u,100u,101u,102u,103u,112u,113u,114u,115u,116u,117u,118u,119u,67108864u,67108865u,67108866u,67108867u,67108868u,67108869u,67108870u,67108871u,67108880u,67108881u,67108882u,67108883u,67108884u,67108885u,67108886u,67108887u,67108896u,67108897u,67108898u,67108899u,67108900u,67108901u,67108902u,67108903u,67108912u,67108913u,67108914u,67108915u,67108916u,67108917u,67108918u,67108919u,67108928u,67108929u,67108930u,67108931u,67108932u,67108933u,67108934u,67108935u,67108944u,67108945u,67108946u,67108947u,67108948u,67108949u,67108950u,67108951u,67108960u,67108961u,67108962u,67108963u,67108964u,67108965u,67108966u,67108967u,67108976u,67108977u,67108978u,67108979u,67108980u,67108981u,67108982u,67108983u,134217728u,134217729u,134217730u,134217731u,134217732u,134217733u,134217734u,134217735u,134217744u,134217745u,134217746u,134217747u,134217748u,134217749u,134217750u,134217751u,134217760u,134217761u,134217762u,134217763u,134217764u,134217765u,134217766u,134217767u,134217776u,134217777u,134217778u,134217779u,134217780u,134217781u,134217782u,134217783u,134217792u,134217793u,134217794u,134217795u,134217796u,134217797u,134217798u,134217799u,134217808u,134217809u,134217810u,134217811u,134217812u,134217813u,134217814u,134217815u,134217824u,134217825u,134217826u,134217827u,134217828u,134217829u,134217830u,134217831u,134217840u,134217841u,134217842u,134217843u,134217844u,134217845u,134217846u,134217847u,201326592u,201326593u,201326594u,201326595u,201326596u,201326597u,201326598u,201326599u,201326608u,201326609u,201326610u,201326611u,201326612u,201326613u,201326614u,201326615u,201326624u,201326625u,201326626u,201326627u,201326628u,201326629u,201326630u,201326631u,201326640u,201326641u,201326642u,201326643u,201326644u,201326645u,201326646u,201326647u,201326656u,201326657u,201326658u,201326659u,201326660u,201326661u,201326662u,201326663u,201326672u,201326673u,201326674u,201326675u,201326676u,201326677u,201326678u,201326679u,201326688u,201326689u,201326690u,201326691u,201326692u,201326693u,201326694u,201326695u,201326704u,201326705u,201326706u,201326707u,201326708u,201326709u,201326710u,201326711u,268435456u,268435457u,268435458u,268435459u,268435460u,268435461u,268435462u,268435463u,268435472u,268435473u,268435474u,268435475u,268435476u,268435477u,268435478u,268435479u,268435488u,268435489u,268435490u,268435491u,268435492u,268435493u,268435494u,268435495u,268435504u,268435505u,268435506u,268435507u,268435508u,268435509u,268435510u,268435511u,268435520u,268435521u,268435522u,268435523u,268435524u,268435525u,268435526u,268435527u,268435536u,268435537u,268435538u,268435539u,268435540u,268435541u,268435542u,268435543u,268435552u,268435553u,268435554u,268435555u,268435556u,268435557u,268435558u,268435559u,268435568u,268435569u,268435570u,268435571u,268435572u,268435573u,268435574u,268435575u,335544320u,335544321u,335544322u,335544323u,335544324u,335544325u,335544326u,335544327u,335544336u,335544337u,335544338u,335544339u,335544340u,335544341u,335544342u,335544343u,335544352u,335544353u,335544354u,335544355u,335544356u,335544357u,335544358u,335544359u,335544368u,335544369u,335544370u,335544371u,335544372u,335544373u,335544374u,335544375u,335544384u,335544385u,335544386u,335544387u,335544388u,335544389u,335544390u,335544391u,335544400u,335544401u,335544402u,335544403u,335544404u,335544405u,335544406u,335544407u,335544416u,335544417u,335544418u,335544419u,335544420u,335544421u,335544422u,335544423u,335544432u,335544433u,335544434u,335544435u,335544436u,335544437u,335544438u,335544439u,402653184u,402653185u,402653186u,402653187u,402653188u,402653189u,402653190u,402653191u,402653200u,402653201u,402653202u,402653203u,402653204u,402653205u,402653206u,402653207u,402653216u,402653217u,402653218u,402653219u,402653220u,402653221u,402653222u,402653223u,402653232u,402653233u,402653234u,402653235u,402653236u,402653237u,402653238u,402653239u,402653248u,402653249u,402653250u,402653251u,402653252u,402653253u,402653254u,402653255u,402653264u,402653265u,402653266u,402653267u,402653268u,402653269u,402653270u,402653271u,402653280u,402653281u,402653282u,402653283u,402653284u,402653285u,402653286u,402653287u,402653296u,402653297u,402653298u,402653299u,402653300u,402653301u,402653302u,402653303u,469762048u,469762049u,469762050u,469762051u,469762052u,469762053u,469762054u,469762055u,469762064u,469762065u,469762066u,469762067u,469762068u,469762069u,469762070u,469762071u,469762080u,469762081u,469762082u,469762083u,469762084u,469762085u,469762086u,469762087u,469762096u,469762097u,469762098u,469762099u,469762100u,469762101u,469762102u,469762103u,469762112u,469762113u,469762114u,469762115u,469762116u,469762117u,469762118u,469762119u,469762128u,469762129u,469762130u,469762131u,469762132u,469762133u,469762134u,469762135u,469762144u,469762145u,469762146u,469762147u,469762148u,469762149u,469762150u,469762151u,469762160u,469762161u,469762162u,469762163u,469762164u,469762165u,469762166u,469762167u);
 
   //Initialization vectors
   QM3 = IV1;  QM0 = IV2;
@@ -232,7 +254,7 @@ int Block1() {
 
   //Start block 1 generation. 
   //TO-DO: add a time limit for collision search.
-  for( ; ; ) {
+  for(int it = 0; it < 1; it++) {
 
     // Q[1]  = .... .... .... .... .... .... .... .... 
     // RNG   = **** **** **** **** **** **** **** ****  0xffffffff
@@ -355,10 +377,10 @@ int Block1() {
 
 
     // Q[2] = .... .... .... .... .... .... .... .... 
-    Q[ 2] = Q[ 1] + RL( F(Q[ 1],QM0  ,QM1  ) + QM2   + x[1] + 0xe8c7b756u,12);
+    Q[ 2] = Q[ 1] + RL( F(Q[ 1],QM0  ,QM1  ) + QM2   + x[1] + 0xe8c7b756u,12u);
 
     // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Q[18] = Q[17] + RL( G(Q[17],Q[16],Q[15]) + Q[14] + x[6] + 0xc040b340u, 9);
+    Q[18] = Q[17] + RL( G(Q[17],Q[16],Q[15]) + Q[14] + x[6] + 0xc040b340u, 9u);
 
     // Q[17] = ^1v. .... .... ..0. ^... .... .... ^... 
     // Q[18] = ^.^. .... .... ..1. .... .... .... .... 
@@ -373,7 +395,7 @@ int Block1() {
     if ( (sigma_Q19 & 0x0003fff8u) == 0x0003fff8u ) 
       continue;
 
-    Q[19] = Q[18] + RL(sigma_Q19, 14);
+    Q[19] = Q[18] + RL(sigma_Q19, 14u);
 
     // Q[18] = ^.^. .... .... ..1. .... .... .... .... 
     // Q[19] = ^... .... .... ..0. .... .... .... .... 
@@ -385,48 +407,48 @@ int Block1() {
     // Extra conditions: Σ20,30 ~ Σ20,32 not all 0
     // 0xe0000000u = 1110 0000 0000 0000 0000 0000 0000 0000
     sigma_Q20 = G(Q[19],Q[18],Q[17]) + Q[16] + x[0] + 0xe9b6c7aau;
-    if ( (sigma_Q20  & 0xe0000000u) == 0 ) 
+    if ( (sigma_Q20  & 0xe0000000u) == 0u ) 
       continue;
 
-    Q[20] = Q[19] + RL(sigma_Q20, 20);
+    Q[20] = Q[19] + RL(sigma_Q20, 20u);
 
     // Q[20] = ^... .... .... ..v. .... .... .... .... 
-    if ( bit(Q[20],32) != bit(Q[15],32) ) 
+    if ( bit(Q[20],32u) != bit(Q[15],32u) ) 
       continue;
 
     // Q[21] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5);   
+    Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5u);   
 
     // Q[20] = ^... .... .... ..v. .... .... .... .... 
     // Q[21] = ^... .... .... ..^. .... .... .... ....
     //         1000 0000 0000 0010 0000 0000 0000 0000  0x80020000u 
-    if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0 ) 
+    if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0u ) 
       continue;
 
     // Q[22] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9);
+    Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9u);
 
     // Q[22] = ^... .... .... .... .... .... .... ....
-    if ( bit(Q[22],32) != bit(Q[15],32) ) 
+    if ( bit(Q[22],32u) != bit(Q[15],32u) ) 
       continue;
 
     // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Extra conditions: Σ23,18 = 0
     sigma_Q23 = G(Q[22],Q[21],Q[20]) + Q[19] + x[15] + 0xd8a1e681u;
-    if ( bit(sigma_Q23,18) != 0 ) 
+    if ( bit(sigma_Q23,18u) != 0u ) 
       continue;
 
-    Q[23] = Q[22] + RL(sigma_Q23, 14);
+    Q[23] = Q[22] + RL(sigma_Q23, 14u);
 
     // Q[23] = 0... .... .... .... .... .... .... ....
-    if ( bit(Q[23],32) != 0 ) 
+    if ( bit(Q[23],32u) != 0u ) 
       continue;
 
     // Q[24] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+    Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
     // Q[24] = 1... .... .... .... .... .... .... ....
-    if ( bit(Q[24],32) != 1) 
+    if ( bit(Q[24],32u) != 1u) 
       continue;
 
     //Every bit condition in Q[1]..Q[24] is now satisfied. We proceed with tunnelling.
@@ -450,7 +472,7 @@ int Block1() {
     ///                       Tunnel Q10                         //
     ///////////////////////////////////////////////////////////////
     //Tunnel Q10 - 3 bits - Probabilistic. Modifications on x[10] disturb probabilistically conditions for Q[22-24]
-    for (itr_Q10 = 0; itr_Q10 < (USE_B1_Q10 ? pow(2,Q10_strength) : 1); itr_Q10++ ) {
+    for (itr_Q10 = 0u; itr_Q10 < (USE_B1_Q10 ? pow2(Q10_strength) : 1u); itr_Q10++ ) {
 
       Q[9]  = tmp_q9;
       Q[10] = tmp_q10;  
@@ -462,44 +484,44 @@ int Block1() {
       x[15] = tmp_x15;
 
       //Multi message modification - Q10 is modified according to its mask (bits 11,25,27)
-      Q[10] = tmp_q10 ^ mask_Q10[USE_B1_Q10 ? itr_Q10 : 0];
+      Q[10] = tmp_q10 ^ mask_Q10[USE_B1_Q10 ? itr_Q10 : 0u];
       
       //x[10] is modified and related states are regenerated
-      x[10] = RR(Q[11]-Q[10],17) - F(Q[10],Q[ 9],Q[ 8]) - Q[ 7] - 0xffff5bb1u; 
+      x[10] = RR(Q[11]-Q[10],17u) - F(Q[10],Q[ 9],Q[ 8]) - Q[ 7] - 0xffff5bb1u; 
 
       //Q10 Tunnel - Verification of bit conditions on Q[22-24]
       
       // Q[22] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9);
+      Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9u);
 
       // Q[22] = ^... .... .... .... .... .... .... ....
-      if ( bit(Q[22],32) != bit(Q[15],32) ) 
+      if ( bit(Q[22],32u) != bit(Q[15],32u) ) 
         continue;
       
       // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // Extra conditions: Σ23,18 = 0
       sigma_Q23 = G(Q[22],Q[21],Q[20]) + Q[19] + x[15] + 0xd8a1e681u;
-      if ( bit(sigma_Q23,18) != 0 ) 
+      if ( bit(sigma_Q23,18u) != 0u ) 
         continue;
 
-      Q[23] = Q[22] + RL(sigma_Q23, 14);
+      Q[23] = Q[22] + RL(sigma_Q23, 14u);
 
       // Q[23] = 0... .... .... .... .... .... .... ....
-      if ( bit(Q[23],32) != 0 ) 
+      if ( bit(Q[23],32u) != 0u ) 
         continue;
 
       // Q[24] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+      Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
       // Q[24] = 1... .... .... .... .... .... .... ....
-      if ( bit(Q[24],32) != 1) 
+      if ( bit(Q[24],32u) != 1u) 
         continue;
 
       ///////////////////////////////////////////////////////////////
       ///                       Tunnel Q20                         //
       ///////////////////////////////////////////////////////////////
       //Tunnel Q20 - 6 bits - Probabilistic. Modifications on Q[20] and free choice of Q[1] and Q[2] lead to change in x[0] and x[2..5]
-      for (itr_Q20 = 0; itr_Q20 < (USE_B1_Q20 ? pow(2,Q20_strength) : 1); itr_Q20++) {
+      for (itr_Q20 = 0u; itr_Q20 < (USE_B1_Q20 ? pow2(Q20_strength) : 1u); itr_Q20++) {
 
         Q[3]  = tmp_q3;
         Q[4]  = tmp_q4;
@@ -508,106 +530,107 @@ int Block1() {
         x[15] = tmp_x15;
 
         //Q20 is modified according to its mask (bits 1,2,10,15,22,24)
-        Q[20] = tmp_q20 ^ mask_Q20[USE_B1_Q20 ? itr_Q20 : 0];
+        Q[20] = tmp_q20 ^ mask_Q20[USE_B1_Q20 ? itr_Q20 : 0u];
 
-        x[ 0] = RR(Q[20] - Q[19],20) - G(Q[19],Q[18],Q[17]) - Q[16] - 0xe9b6c7aau;
+        x[ 0] = RR(Q[20] - Q[19],20u) - G(Q[19],Q[18],Q[17]) - Q[16] - 0xe9b6c7aau;
 
-        Q[ 1] = QM0  + RL(F( QM0, QM1, QM2) + QM3 + x[0] + 0xd76aa478u,  7);
-        Q[ 2] = Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756u, 12);
+        Q[ 1] = QM0  + RL(F( QM0, QM1, QM2) + QM3 + x[0] + 0xd76aa478u,  7u);
+        Q[ 2] = Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756u, 12u);
 
-        x[ 4] = RR(Q[5] - Q[4],  7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
-        x[ 5] = RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62au;
+        x[ 4] = RR(Q[5] - Q[4],  7u) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
+        x[ 5] = RR(Q[6] - Q[5], 12u) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62au;
 
         // Tunnel Q20 - Verification of bit conditions on Q[21-24]
         // Q[21] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5);   
+        Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5u);   
 
         // Q[20] = ^... .... .... ..v. .... .... .... .... 
         // Q[21] = ^... .... .... ..^. .... .... .... ....
         //         1000 0000 0000 0010 0000 0000 0000 0000  0x80020000u 
-        if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0 ) 
+        if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0u) 
           continue;
 
         // Q[22] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9);
+        Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9u);
 
         // Q[22] = ^... .... .... .... .... .... .... ....
-        if ( bit(Q[22],32) != bit(Q[15],32) ) 
+        if ( bit(Q[22],32u) != bit(Q[15],32u) ) 
           continue;
 
         // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ23,18 = 0
         sigma_Q23 = G(Q[22],Q[21],Q[20]) + Q[19] + x[15] + 0xd8a1e681u;
-        if ( bit(sigma_Q23,18) != 0 ) 
+        if ( bit(sigma_Q23,18u) != 0u ) 
           continue;
 
-        Q[23] = Q[22] + RL(sigma_Q23, 14);
+        Q[23] = Q[22] + RL(sigma_Q23, 14u);
 
         // Q[23] = 0... .... .... .... .... .... .... ....
-        if ( bit(Q[23],32) != 0 ) 
+        if ( bit(Q[23],32u) != 0u) 
           continue;
 
         // Q[24] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+        Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
         // Q[24] = 1... .... .... .... .... .... .... ....
-        if ( bit(Q[24],32) != 1) 
+        if ( bit(Q[24],32u) != 1u)
           continue;
 
         ///////////////////////////////////////////////////////////////
         ///                       Tunnel Q13                         //
         ///////////////////////////////////////////////////////////////
         //Tunnel Q13 - 12 bits - Probabilistic. Modifications on Q[13] and free choice of Q[2] lead to change in x[1..5] and x[15]
-        for(itr_Q13 = 0; itr_Q13 < (USE_B1_Q13 ? pow(2,Q13_strength) : 1); itr_Q13++ ) {
+        for(itr_Q13 = 0u; itr_Q13 < (USE_B1_Q13 ? pow2(Q13_strength) : 1u); itr_Q13++ ) {
           
           Q[3]  = tmp_q3;
           Q[4]  = tmp_q4;
           Q[14] = tmp_q14;
 
-          Q[13] = tmp_q13 ^ mask_Q13[USE_B1_Q13 ? itr_Q13 : 0];
+          /* Q[13] = tmp_q13 ^ mask_Q13[USE_B1_Q13 ? itr_Q13 : 0u]; */
+          Q[13] = tmp_q13 ^ (USE_B1_Q13? mask_Q(Q13_strength, Q13_mask_bits, itr_Q13) : 0u);
           
-          x[ 1] = RR(Q[17] - Q[16], 5) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562u;
+          x[ 1] = RR(Q[17] - Q[16], 5u) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562u;
           
-          Q[ 2] = Q[ 1] + RL(F(Q[1 ], QM0, QM1) + QM2 + x[ 1] + 0xe8c7b756u, 12);
+          Q[ 2] = Q[ 1] + RL(F(Q[1 ], QM0, QM1) + QM2 + x[ 1] + 0xe8c7b756u, 12u);
           
-          x[ 4] = RR(Q[ 5] - Q[ 4], 7) - F(Q[ 4], Q[ 3], Q[ 2]) - Q[ 1] - 0xf57c0fafu;
-          x[ 5] = RR(Q[ 6] - Q[ 5],12) - F(Q[ 5], Q[ 4], Q[ 3]) - Q[ 2] - 0x4787c62au;
-          x[15] = RR(Q[16] - Q[15],22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821u;
+          x[ 4] = RR(Q[ 5] - Q[ 4], 7u) - F(Q[ 4], Q[ 3], Q[ 2]) - Q[ 1] - 0xf57c0fafu;
+          x[ 5] = RR(Q[ 6] - Q[ 5],12u) - F(Q[ 5], Q[ 4], Q[ 3]) - Q[ 2] - 0x4787c62au;
+          x[15] = RR(Q[16] - Q[15],22u) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821u;
 
           // Tunnel Q13 - Verification of bit conditions on Q[21-24]
           // Q[21] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5);   
+          Q[21] = Q[20] + RL(G(Q[20],Q[19],Q[18]) + Q[17] + x[5] + 0xd62f105du, 5u);   
 
           // Q[20] = ^... .... .... ..v. .... .... .... .... 
           // Q[21] = ^... .... .... ..^. .... .... .... ....
           //         1000 0000 0000 0010 0000 0000 0000 0000  0x80020000u 
-          if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0 ) 
+          if ( ((Q[21] ^ Q[20]) & 0x80020000u) != 0u) 
             continue;
 
           // Q[22] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9);
+          Q[22] = Q[21] + RL(G(Q[21],Q[20],Q[19]) + Q[18] + x[10] + 0x2441453u, 9u);
 
           // Q[22] = ^... .... .... .... .... .... .... ....
-          if ( bit(Q[22],32) != bit(Q[15],32) ) 
+          if ( bit(Q[22],32u) != bit(Q[15],32u) ) 
             continue;
 
           // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
           // Extra conditions: Σ23,18 = 0
           sigma_Q23 = G(Q[22],Q[21],Q[20]) + Q[19] + x[15] + 0xd8a1e681u;
-          if ( bit(sigma_Q23,18) != 0 ) 
+          if ( bit(sigma_Q23,18u) != 0u) 
             continue;
 
-          Q[23] = Q[22] + RL(sigma_Q23, 14);
+          Q[23] = Q[22] + RL(sigma_Q23, 14u);
 
           // Q[23] = 0... .... .... .... .... .... .... ....
-          if ( bit(Q[23],32) != 0 ) 
+          if ( bit(Q[23],32u) != 0u) 
             continue;
 
           // Q[24] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+          Q[24] = Q[23] + RL(G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
           // Q[24] = 1... .... .... .... .... .... .... ....
-          if ( bit(Q[24],32) != 1) 
+          if ( bit(Q[24],32u) != 1u) 
             continue;
 
           ///////////////////////////////////////////////////////////////
@@ -661,8 +684,8 @@ int Block1() {
           // Q[ 7] = Q[ 6]+RL(F(Q[ 6],Q[ 5],Q[ 4])+Q[ 3]+x[ 6]+0xa8304613u,17); 
 
           //We eliminate x[6] from our equations. We will work on const_unmasked to compensate variations on bits
-          const_unmasked = RR(Q[7]-Q[6],17) - 0xa8304613u //= F(Q[ 6],Q[ 5],Q[ 4]) + Q[ 3] + x[ 6]
-                          -RR(Q[18]-Q[17],9) + G(Q[17],Q[16],Q[15]) + 0xc040b340u //= -Q[14] -x[ 6]
+          const_unmasked = RR(Q[7]-Q[6],17u) - 0xa8304613u //= F(Q[ 6],Q[ 5],Q[ 4]) + Q[ 3] + x[ 6]
+                          -RR(Q[18]-Q[17],9u) + G(Q[17],Q[16],Q[15]) + 0xc040b340u //= -Q[14] -x[ 6]
                           -F(Q[6],Q[5],Q4_fix) - Q3_fix + Q14_fix;
 
           //So const_unmasked is the difference (F(Q[6],Q[5],Q[4]) - F(Q[6],Q[5],Q4_fix)) + (Q[3]-Q3_fix) - (Q[14]-Q14_fix)
@@ -672,18 +695,18 @@ int Block1() {
 
 
           //Tunnel Q14 starts
-          for(itr_Q14 = 0; itr_Q14 < (USE_B1_Q14 ? pow(2,Q14_strength) : 1); itr_Q14++ ) {
+          for(itr_Q14 = 0u; itr_Q14 < (USE_B1_Q14 ? pow2(Q14_strength) : 1u); itr_Q14++ ) {
 
             //Q14 is modified according to its mask {1, 2, 3, 5, 6, 7, 27, 28, 29}
             //NOTE that const_unmasked consider carries. So operations are +,- and not XOR.
-            const_masked = const_unmasked + mask_Q14[USE_B1_Q14 ? itr_Q14 : 0];
+            const_masked = const_unmasked + mask_Q14[USE_B1_Q14 ? itr_Q14 : 0u];
             
             //If the current value for Q[14] affects bits in const_masked that are outside 
             //0xfc00002fu = 1111  1100  0000  0000  0000  0000  0010  1111
             //this means that this modification cannot be compensated by Q[3]/Q[4] and then we need to continue
             //
             //0x03ffffd0u = 0000  0011  1111  1111  1111  1111  1101  0000
-            if ((const_masked & 0x03ffffd0u) != 0)
+            if ((const_masked & 0x03ffffd0u) != 0u)
               continue;
 
             //We recover the remaining bits of Q[3],Q[4] and Q[14] from the current const_masked
@@ -691,30 +714,30 @@ int Block1() {
             Q[ 4] = Q4_fix + (const_masked & 0x7400000au);
             Q[14] = Q14_fix + mask_Q14[itr_Q14];
 
-            x[2] = RR(Q[3] - Q[2], 17) - F(Q[2], Q[1], QM0) - QM1 - 0x242070dbu;
+            x[2] = RR(Q[3] - Q[2], 17u) - F(Q[2], Q[1], QM0) - QM1 - 0x242070dbu;
 
             ///////////////////////////////////////////////////////////////
             ///                       Tunnel Q4                          //
             ///////////////////////////////////////////////////////////////
             //Tunnel Q4 - 1 bit - Probabilistic tunnel. Modification on Q[4][26] will probably affect Q[24][32] 
-            for (itr_Q4 = 0; itr_Q4 < (USE_B1_Q4 ? pow(2,Q4_strength) : 1); itr_Q4++) {
+            for (itr_Q4 = 0u; itr_Q4 < (USE_B1_Q4 ? pow2(Q4_strength) : 1u); itr_Q4++) {
 
-              Q[4] = Q[4] ^ mask_Q4[USE_B1_Q4 ? itr_Q4 : 0];
+              Q[4] = Q[4] ^ mask_Q4[USE_B1_Q4 ? itr_Q4 : 0u];
 
-              x[4] = RR(Q[5] - Q[4],  7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
+              x[4] = RR(Q[5] - Q[4],  7u) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
 
               // Q[24] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              Q[24] = Q[23] + RL( G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+              Q[24] = Q[23] + RL( G(Q[23],Q[22],Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
                 
               // Q[24] = 1... .... .... .... .... .... .... ....
-              if (bit(Q[24],32) != 1) 
+              if (bit(Q[24],32u) != 1u) 
                 continue;
 
-              x[ 3] = RR(Q[ 4] - Q[ 3], 22) - F(Q[ 3], Q[ 2], Q[ 1]) -   QM0 - 0xc1bdceeeu;
-              x[ 6] = RR(Q[ 7] - Q[ 6], 17) - F(Q[ 6], Q[ 5], Q[ 4]) - Q[ 3] - 0xa8304613u; 
-              x[ 7] = RR(Q[ 8] - Q[ 7], 22) - F(Q[ 7], Q[ 6], Q[ 5]) - Q[ 4] - 0xfd469501u;
-              x[13] = RR(Q[14] - Q[13], 12) - F(Q[13], Q[12], Q[11]) - Q[10] - 0xfd987193u; 
-              x[14] = RR(Q[15] - Q[14], 17) - F(Q[14], Q[13], Q[12]) - Q[11] - 0xa679438eu; 
+              x[ 3] = RR(Q[ 4] - Q[ 3], 22u) - F(Q[ 3], Q[ 2], Q[ 1]) -   QM0 - 0xc1bdceeeu;
+              x[ 6] = RR(Q[ 7] - Q[ 6], 17u) - F(Q[ 6], Q[ 5], Q[ 4]) - Q[ 3] - 0xa8304613u; 
+              x[ 7] = RR(Q[ 8] - Q[ 7], 22u) - F(Q[ 7], Q[ 6], Q[ 5]) - Q[ 4] - 0xfd469501u;
+              x[13] = RR(Q[14] - Q[13], 12u) - F(Q[13], Q[12], Q[11]) - Q[10] - 0xfd987193u; 
+              x[14] = RR(Q[15] - Q[14], 17u) - F(Q[14], Q[13], Q[12]) - Q[11] - 0xa679438eu; 
 
      
               ///////////////////////////////////////////////////////////////
@@ -723,119 +746,119 @@ int Block1() {
               //Tunnel Q9 - 3 bits - Deterministic tunnel. If the i-th bit of Q[10] would be zero 
               //and the i-th bit of Q[11] would be one, an eventual change of the i-th 
               //bit of Q[9] shouldn't affect the equations for Q[11] and Q[12].
-              for(itr_Q9 = 0; itr_Q9 < (USE_B1_Q9 ? pow(2,Q9_strength) : 1); itr_Q9++ ) {
+              for(itr_Q9 = 0u; itr_Q9 < (USE_B1_Q9 ? pow2(Q9_strength) : 1u); itr_Q9++ ) {
 
-                  Q[ 9] = tmp_q9 ^ mask_Q9[USE_B1_Q9 ? itr_Q9 : 0]; 
+                  Q[ 9] = tmp_q9 ^ mask_Q9[USE_B1_Q9 ? itr_Q9 : 0u]; 
 
-                  x[ 8] = RR(Q[ 9]-Q[ 8],  7) - F(Q[ 8], Q[ 7], Q[ 6]) - Q[5] - 0x698098d8u;
-                  x[ 9] = RR(Q[10]-Q[ 9], 12) - F(Q[ 9], Q[ 8], Q[ 7]) - Q[6] - 0x8b44f7afu;    
-                  x[12] = RR(Q[13]-Q[12],  7) - F(Q[12], Q[11], Q[10]) - Q[9] - 0x6b901122u;
+                  x[ 8] = RR(Q[ 9]-Q[ 8],  7u) - F(Q[ 8], Q[ 7], Q[ 6]) - Q[5] - 0x698098d8u;
+                  x[ 9] = RR(Q[10]-Q[ 9], 12u) - F(Q[ 9], Q[ 8], Q[ 7]) - Q[6] - 0x8b44f7afu;    
+                  x[12] = RR(Q[13]-Q[12],  7u) - F(Q[12], Q[11], Q[10]) - Q[9] - 0x6b901122u;
                  
-                  Q[25] = Q[24] + RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[ 9] + 0x21e1cde6u,  5);
-                  Q[26] = Q[25] + RL(G(Q[25], Q[24], Q[23]) + Q[22] + x[14] + 0xc33707d6u,  9);            
-                  Q[27] = Q[26] + RL(G(Q[26], Q[25], Q[24]) + Q[23] + x[ 3] + 0xf4d50d87u, 14);
-                  Q[28] = Q[27] + RL(G(Q[27], Q[26], Q[25]) + Q[24] + x[ 8] + 0x455a14edu, 20);
-                  Q[29] = Q[28] + RL(G(Q[28], Q[27], Q[26]) + Q[25] + x[13] + 0xa9e3e905u,  5);
-                  Q[30] = Q[29] + RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[ 2] + 0xfcefa3f8u,  9);
-                  Q[31] = Q[30] + RL(G(Q[30], Q[29], Q[28]) + Q[27] + x[ 7] + 0x676f02d9u, 14);
-                  Q[32] = Q[31] + RL(G(Q[31], Q[30], Q[29]) + Q[28] + x[12] + 0x8d2a4c8au, 20);
-                  Q[33] = Q[32] + RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[ 5] + 0xfffa3942u,  4);          
-                  Q[34] = Q[33] + RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[ 8] + 0x8771f681u, 11);
+                  Q[25] = Q[24] + RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[ 9] + 0x21e1cde6u,  5u);
+                  Q[26] = Q[25] + RL(G(Q[25], Q[24], Q[23]) + Q[22] + x[14] + 0xc33707d6u,  9u);            
+                  Q[27] = Q[26] + RL(G(Q[26], Q[25], Q[24]) + Q[23] + x[ 3] + 0xf4d50d87u, 14u);
+                  Q[28] = Q[27] + RL(G(Q[27], Q[26], Q[25]) + Q[24] + x[ 8] + 0x455a14edu, 20u);
+                  Q[29] = Q[28] + RL(G(Q[28], Q[27], Q[26]) + Q[25] + x[13] + 0xa9e3e905u,  5u);
+                  Q[30] = Q[29] + RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[ 2] + 0xfcefa3f8u,  9u);
+                  Q[31] = Q[30] + RL(G(Q[30], Q[29], Q[28]) + Q[27] + x[ 7] + 0x676f02d9u, 14u);
+                  Q[32] = Q[31] + RL(G(Q[31], Q[30], Q[29]) + Q[28] + x[12] + 0x8d2a4c8au, 20u);
+                  Q[33] = Q[32] + RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[ 5] + 0xfffa3942u,  4u);          
+                  Q[34] = Q[33] + RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[ 8] + 0x8771f681u, 11u);
 
                   // Extra conditions: Σ35,16 = 0
                   sigma_Q35 = H(Q[34],Q[33],Q[32]) + Q[31] + x[11] + 0x6d9d6122u;
-                  if (bit(sigma_Q35,16) != 0)
+                  if (bit(sigma_Q35,16u) != 0u)
                     continue; 
 
-                  Q[35] = Q[34] + RL(sigma_Q35, 16);
+                  Q[35] = Q[34] + RL(sigma_Q35, 16u);
 
-                  Q[36] = Q[35] + RL(H(Q[35], Q[34], Q[33]) + Q[32] + x[14] + 0xfde5380cu, 23);
-                  Q[37] = Q[36] + RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[ 1] + 0xa4beea44u,  4);
-                  Q[38] = Q[37] + RL(H(Q[37], Q[36], Q[35]) + Q[34] + x[ 4] + 0x4bdecfa9u, 11);
-                  Q[39] = Q[38] + RL(H(Q[38], Q[37], Q[36]) + Q[35] + x[ 7] + 0xf6bb4b60u, 16);
-                  Q[40] = Q[39] + RL(H(Q[39], Q[38], Q[37]) + Q[36] + x[10] + 0xbebfbc70u, 23);
-                  Q[41] = Q[40] + RL(H(Q[40], Q[39], Q[38]) + Q[37] + x[13] + 0x289b7ec6u,  4);
-                  Q[42] = Q[41] + RL(H(Q[41], Q[40], Q[39]) + Q[38] + x[ 0] + 0xeaa127fau, 11);
-                  Q[43] = Q[42] + RL(H(Q[42], Q[41], Q[40]) + Q[39] + x[ 3] + 0xd4ef3085u, 16);
-                  Q[44] = Q[43] + RL(H(Q[43], Q[42], Q[41]) + Q[40] + x[ 6] + 0x04881d05u, 23);
-                  Q[45] = Q[44] + RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[ 9] + 0xd9d4d039u,  4);
-                  Q[46] = Q[45] + RL(H(Q[45], Q[44], Q[43]) + Q[42] + x[12] + 0xe6db99e5u, 11);
-                  Q[47] = Q[46] + RL(H(Q[46], Q[45], Q[44]) + Q[43] + x[15] + 0x1fa27cf8u, 16);
-                  Q[48] = Q[47] + RL(H(Q[47], Q[46], Q[45]) + Q[44] + x[ 2] + 0xc4ac5665u, 23);
+                  Q[36] = Q[35] + RL(H(Q[35], Q[34], Q[33]) + Q[32] + x[14] + 0xfde5380cu, 23u);
+                  Q[37] = Q[36] + RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[ 1] + 0xa4beea44u,  4u);
+                  Q[38] = Q[37] + RL(H(Q[37], Q[36], Q[35]) + Q[34] + x[ 4] + 0x4bdecfa9u, 11u);
+                  Q[39] = Q[38] + RL(H(Q[38], Q[37], Q[36]) + Q[35] + x[ 7] + 0xf6bb4b60u, 16u);
+                  Q[40] = Q[39] + RL(H(Q[39], Q[38], Q[37]) + Q[36] + x[10] + 0xbebfbc70u, 23u);
+                  Q[41] = Q[40] + RL(H(Q[40], Q[39], Q[38]) + Q[37] + x[13] + 0x289b7ec6u,  4u);
+                  Q[42] = Q[41] + RL(H(Q[41], Q[40], Q[39]) + Q[38] + x[ 0] + 0xeaa127fau, 11u);
+                  Q[43] = Q[42] + RL(H(Q[42], Q[41], Q[40]) + Q[39] + x[ 3] + 0xd4ef3085u, 16u);
+                  Q[44] = Q[43] + RL(H(Q[43], Q[42], Q[41]) + Q[40] + x[ 6] + 0x04881d05u, 23u);
+                  Q[45] = Q[44] + RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[ 9] + 0xd9d4d039u,  4u);
+                  Q[46] = Q[45] + RL(H(Q[45], Q[44], Q[43]) + Q[42] + x[12] + 0xe6db99e5u, 11u);
+                  Q[47] = Q[46] + RL(H(Q[46], Q[45], Q[44]) + Q[43] + x[15] + 0x1fa27cf8u, 16u);
+                  Q[48] = Q[47] + RL(H(Q[47], Q[46], Q[45]) + Q[44] + x[ 2] + 0xc4ac5665u, 23u);
                                   
                   //Sufficient conditions
-                  if ( bit(Q[46], 32) != bit(Q[48], 32) ) 
+                  if ( bit(Q[46], 32u) != bit(Q[48], 32u) ) 
                     continue; 
 
-                  Q[49] = Q[48] + RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[ 0] + 0xf4292244u,  6);
+                  Q[49] = Q[48] + RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[ 0] + 0xf4292244u,  6u);
                               
-                  if (bit(Q[47],32) != bit(Q[49],32)) 
+                  if (bit(Q[47],32u) != bit(Q[49],32u)) 
                     continue;
 
-                  Q[50] = Q[49] + RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[ 7] + 0x432aff97u, 10);
+                  Q[50] = Q[49] + RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[ 7] + 0x432aff97u, 10u);
               
-                  if (bit(Q[50],32) != (bit(Q[48],32) ^ 1)) 
+                  if (bit(Q[50],32u) != (bit(Q[48],32u) ^ 1u)) 
                     continue;
 
-                  Q[51] = Q[50] + RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7u, 15);
+                  Q[51] = Q[50] + RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7u, 15u);
                   
-                  if (bit(Q[51],32) != bit(Q[49],32)) 
+                  if (bit(Q[51],32u) != bit(Q[49],32u)) 
                     continue;  
                   
-                  Q[52] = Q[51] + RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[ 5] + 0xfc93a039u, 21);
+                  Q[52] = Q[51] + RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[ 5] + 0xfc93a039u, 21u);
                       
-                  if (bit(Q[52],32) != bit(Q[50],32)) 
+                  if (bit(Q[52],32u) != bit(Q[50],32u)) 
                     continue; 
 
-                  Q[53] = Q[52] + RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3u, 6); 
+                  Q[53] = Q[52] + RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3u, 6u); 
                                 
-                  if (bit(Q[53],32) != bit(Q[51],32)) 
+                  if (bit(Q[53],32u) != bit(Q[51],32u)) 
                     continue; 
 
-                  Q[54] = Q[53] + RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[ 3] + 0x8f0ccc92u, 10);    
+                  Q[54] = Q[53] + RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[ 3] + 0x8f0ccc92u, 10u);    
                   
-                  if (bit(Q[54],32) != bit(Q[52],32)) 
+                  if (bit(Q[54],32u) != bit(Q[52],32u)) 
                     continue; 
 
-                  Q[55] = Q[54] + RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47du, 15);   
+                  Q[55] = Q[54] + RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47du, 15u);   
                   
-                  if (bit(Q[55],32) != bit(Q[53],32)) 
+                  if (bit(Q[55],32u) != bit(Q[53],32u)) 
                     continue; 
 
-                  Q[56] = Q[55] + RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[ 1] + 0x85845dd1u, 21);    
+                  Q[56] = Q[55] + RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[ 1] + 0x85845dd1u, 21u);    
                   
-                  if (bit(Q[56],32) != bit(Q[54],32)) 
+                  if (bit(Q[56],32u) != bit(Q[54],32u)) 
                     continue; 
 
-                  Q[57] = Q[56] + RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[ 8] + 0x6fa87e4fu, 6);   
+                  Q[57] = Q[56] + RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[ 8] + 0x6fa87e4fu, 6u);   
                   
-                  if (bit(Q[57],32) != bit(Q[55],32)) 
+                  if (bit(Q[57],32u) != bit(Q[55],32u)) 
                     continue; 
 
-                  Q[58] = Q[57] + RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0u, 10);   
+                  Q[58] = Q[57] + RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0u, 10u);   
                   
-                  if (bit(Q[58],32) != bit(Q[56],32)) 
+                  if (bit(Q[58],32u) != bit(Q[56],32u)) 
                     continue; 
 
-                  Q[59] = Q[58] + RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[ 6] + 0xa3014314u, 15);    
+                  Q[59] = Q[58] + RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[ 6] + 0xa3014314u, 15u);    
                   
-                  if (bit(Q[59],32) != bit(Q[57],32)) 
+                  if (bit(Q[59],32u) != bit(Q[57],32u)) 
                     continue; 
 
-                  Q[60] = Q[59] + RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1u, 21);   
+                  Q[60] = Q[59] + RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1u, 21u);   
                   
-                  if (bit(Q[60],26) != 0) 
+                  if (bit(Q[60],26u) != 0u) 
                     continue; 
 
-                  if (bit(Q[60],32) != (bit(Q[58],32) ^ 1)) 
+                  if (bit(Q[60],32u) != (bit(Q[58],32u) ^ 1u)) 
                     continue; 
 
-                  Q[61] = Q[60] + RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[ 4] + 0xf7537e82u,  6);   
+                  Q[61] = Q[60] + RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[ 4] + 0xf7537e82u,  6u);   
                   
-                  if (bit(Q[61],26) != 1) 
+                  if (bit(Q[61],26u) != 1u) 
                     continue; 
 
-                  if (bit(Q[61],32) != bit(Q[59],32)) 
+                  if (bit(Q[61],32u) != bit(Q[59],32u)) 
                     continue; 
 
                   //Extra conditions: Σ62,16 ~ Σ62,22 not all ones
@@ -844,38 +867,38 @@ int Block1() {
                   if ( (sigma_Q62 & 0x003f8000u) == 0x003f8000u )
                     continue;
 
-                  Q[62] = Q[61] + RL(sigma_Q62 , 10); 
+                  Q[62] = Q[61] + RL(sigma_Q62 , 10u); 
 
-                  Q[63] = Q[62] + RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bbu, 15);    
-                  Q[64] = Q[63] + RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391u, 21);    
+                  Q[63] = Q[62] + RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bbu, 15u);    
+                  Q[64] = Q[63] + RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391u, 21u);    
                     
                   //We add the initial vector to obtain the Intermediate Hash Values of the current block
                   AA0 = IV1 + Q[61];  BB0 = IV2 + Q[64];
                   CC0 = IV3 + Q[63];  DD0 = IV4 + Q[62];
                   
                   //Last sufficient conditions  
-                  if (bit(BB0,6) != 0) 
+                  if (bit(BB0,6u) != 0u) 
                     continue;
 
-                  if (bit(BB0,26) != 0) 
+                  if (bit(BB0,26u) != 0u) 
                     continue;
 
-                  if (bit(BB0,27) != 0) 
+                  if (bit(BB0,27u) != 0u) 
                     continue;
 
-                  if (bit(CC0,26) != 1)
+                  if (bit(CC0,26u) != 1u)
                     continue;
 
-                  if (bit(CC0,27) != 0) 
+                  if (bit(CC0,27u) != 0u) 
                     continue;  
 
-                  if (bit(DD0,26) != 0 ) 
+                  if (bit(DD0,26u) != 0u) 
                     continue;
 
-                  if (bit(BB0,32) != bit(CC0,32)) 
+                  if (bit(BB0,32u) != bit(CC0,32u)) 
                     continue;
 
-                  if (bit(CC0,32) != bit(DD0,32)) 
+                  if (bit(CC0,32u) != bit(DD0,32u)) 
                     continue;
 
                   //Message 1 block 1 computation completed. 
@@ -885,7 +908,7 @@ int Block1() {
                   //While message 2 block 1 is Hx = x + C
 
                   //Message 2 block 1 hash computation
-                  for(i = 0; i < 16; i++) 
+                  for(i = 0u; i < 16u; i++) 
                     Hx[i] = x[i];
 
                   Hx[ 4] = x[ 4] + 0x80000000u;
@@ -913,10 +936,10 @@ int Block1() {
                   A1=AA1; B1=BB1; C1=CC1; D1=DD1;
 
                   //We store both first blocks
-                  for (i=0; i<16; i++) {
-                    memcpy( &v1[4*i], &x[i],  4); 
-                    memcpy( &v2[4*i], &Hx[i], 4);
-                  }
+                  /* for (i=0u; i<16u; i++) { */
+                  /*   memcpy( &v1[4*i], &x[i],  4); */ 
+                  /*   memcpy( &v2[4*i], &Hx[i], 4); */
+                  /* } */
 
                   return 0;
 
@@ -935,8 +958,8 @@ int Block1() {
 void main() {
     /* gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); */
     pos = ivec2(position * 256.0);
-    uint x = uint(pos.x);
-    uint y = uint(pos.y);
+    u32 x = u32(pos.x);
+    u32 y = u32(pos.y);
     if((x & 2u) == 2u) {
         color = vec4(position.x, position.y, 1.0, 1.0);
     } else {
