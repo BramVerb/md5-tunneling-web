@@ -5,9 +5,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="" />
+    <script src="helpers.js" defer></script>
+    <script src="block1.js" defer></script>
+    <script src="block2.js" defer></script>
+    <script type="glsl" src="vshader.vs" id="vshader"></script>
+    <script type="glsl" src="fshader.fs" id="fshader"></script>
+    <script src="gpu.js" defer></script>
     <script src="main.js" defer></script>
   </head>
   <body>
-    <h1>Hello, world!</h1>
+    <h1>MD5 Tunneling Attack</h1>
+    <section>
+      <h2>Inputs</h2>
+      <label for="seed"
+             >Seed (in hex)
+             <input id="seed" type="text" default="4" />
+      </label>
+        <button id="start">Start</button>
+    </section>
+    <section>
+      <h2>Output</h2>
+      <p></p>
+    </section>
+    <section>
+      <canvas id="canvas" width="256", height="256"></canvas>
+    </section>
+<style>
+canvas {
+  border: 1px solid black;
+}
+</style>
   </body>
 </html>
