@@ -201,7 +201,7 @@ u32 mask_Q(int strength, int[12] mask_bits, u32 i) {
     return mask;
 }
 
-int Block1() {
+int Block1(uint startX, uint startY) {
 
   u32 Q[65], x[16], QM0, QM1, QM2, QM3;
   u32 sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
@@ -958,13 +958,32 @@ int Block1() {
 void main() {
     /* gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); */
     pos = ivec2(position * 256.0);
-    u32 x = u32(pos.x);
-    u32 y = u32(pos.y);
-    if((x & 2u) == 2u) {
-        color = vec4(position.x, position.y, 1.0, 1.0);
-    } else {
-        color = vec4(1.0, 1.0, position.x, 1.0);
-    }
+    u32 x = uint(pos.x);
+    u32 y = uint(pos.y);
+    /* if((x & 2u) == 2u) { */
+    /* } else { */
+    /*     color = vec4(1.0, 1.0, position.x, 1.0); */
+    /* } */
     /* color = vec4(position.x, position.y, 1.0, 1.0); */
-    HMD5Tr();
+    /* for(int i = 0; i < 100000; i++) { */
+    /*   HMD5Tr(); */
+    /* } */
+    X = 3770369038u;
+    IV1 = 0x67452301u;
+    IV2 = 0xefcdab89u;
+    IV3 = 0x98badcfeu;
+    IV4 = 0x10325476u;
+
+    // TODO USE this to determine which conditions to check.
+    //
+    //
+    u32 id = x + y * 256u;
+    /* X = 4u; */
+    /* if(x <= 100u && y <= 100u) { */
+      if (Block1(x, y) == 0) {
+        color = vec4(0.5+position.x, 0.5+position.y, 1.0, 1.0);
+      } else {
+        color = vec4(0.0, 0.0, 0.0, 1.0);
+      }
+    /* } */
 }
