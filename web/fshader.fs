@@ -201,7 +201,7 @@ u32 mask_Q(int strength, int[12] mask_bits, u32 i) {
     return mask;
 }
 
-int Block1(uint startX, uint startY) {
+int Block1(uint id) {
 
   u32 Q[65], x[16], QM0, QM1, QM2, QM3;
   u32 sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
@@ -217,17 +217,26 @@ int Block1(uint startX, uint startY) {
   int Q4_strength = 1;
   u32 mask_Q4[] = uint[](0u,33554432u);
   /* const u32 * mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits); */
+  u32 startQ4 = id & ((1u << Q4_strength) - 1u);
+  u32 endQ4 = startQ4 + 1u; // (USE_B1_Q4 ? pow2(Q4_strength) : 1u);
+  id = id >> Q4_strength;
 
   //Mask generation for tunnel Q9 - 3 bits
   int Q9_mask_bits[] = int[]( 22, 23, 24 );
   int Q9_strength = 3;
   /* const u32 * mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits); */ 
   u32 mask_Q9[] = uint[](0u,2097152u,4194304u,6291456u,8388608u,10485760u,12582912u,14680064u);
+  u32 startQ9 = id & ((1u << Q9_strength) - 1u);
+  u32 endQ9 = startQ9 + 1u; // (USE_B1_Q9 ? pow2(Q9_strength) : 1u);
+  id = id >> Q9_strength;
 
   //Mask generation for tunnel Q13 - 12 bits
   int Q13_mask_bits[] = int[]( 2,3,5,7,10,11,12,21,22,23,28,29 );
   int Q13_strength = 12;
   /* const u32 * mask_Q13 = generate_mask(Q13_strength, Q13_mask_bits); */ 
+  u32 startQ13 = id & ((1u << Q13_strength) - 1u);
+  u32 endQ13 = startQ13 + 1u; // (USE_B1_Q13 ? pow2(Q13_strength) : 1u);
+  id = id >> Q13_strength;
 
   //Mask generation for tunnel Q20 - 6 bits
   int Q20_mask_bits[] = int[]( 1, 2, 10, 15, 22, 24 );
@@ -580,7 +589,7 @@ int Block1(uint startX, uint startY) {
         ///                       Tunnel Q13                         //
         ///////////////////////////////////////////////////////////////
         //Tunnel Q13 - 12 bits - Probabilistic. Modifications on Q[13] and free choice of Q[2] lead to change in x[1..5] and x[15]
-        for(itr_Q13 = 0u; itr_Q13 < (USE_B1_Q13 ? pow2(Q13_strength) : 1u); itr_Q13++ ) {
+        for(itr_Q13 = startQ13; itr_Q13 < endQ13; itr_Q13++ ) {
           
           Q[3]  = tmp_q3;
           Q[4]  = tmp_q4;
@@ -720,7 +729,7 @@ int Block1(uint startX, uint startY) {
             ///                       Tunnel Q4                          //
             ///////////////////////////////////////////////////////////////
             //Tunnel Q4 - 1 bit - Probabilistic tunnel. Modification on Q[4][26] will probably affect Q[24][32] 
-            for (itr_Q4 = 0u; itr_Q4 < (USE_B1_Q4 ? pow2(Q4_strength) : 1u); itr_Q4++) {
+            for (itr_Q4 = startQ4; itr_Q4 < endQ4; itr_Q4++) {
 
               Q[4] = Q[4] ^ mask_Q4[USE_B1_Q4 ? itr_Q4 : 0u];
 
@@ -746,7 +755,7 @@ int Block1(uint startX, uint startY) {
               //Tunnel Q9 - 3 bits - Deterministic tunnel. If the i-th bit of Q[10] would be zero 
               //and the i-th bit of Q[11] would be one, an eventual change of the i-th 
               //bit of Q[9] shouldn't affect the equations for Q[11] and Q[12].
-              for(itr_Q9 = 0u; itr_Q9 < (USE_B1_Q9 ? pow2(Q9_strength) : 1u); itr_Q9++ ) {
+              for(itr_Q9 = startQ9; itr_Q9 < endQ9; itr_Q9++ ) {
 
                   Q[ 9] = tmp_q9 ^ mask_Q9[USE_B1_Q9 ? itr_Q9 : 0u]; 
 
@@ -980,7 +989,7 @@ void main() {
     u32 id = x + y * 256u;
     /* X = 4u; */
     /* if(x <= 100u && y <= 100u) { */
-      if (Block1(x, y) == 0) {
+      if (Block1(id) == 0) {
         color = vec4(0.5+position.x, 0.5+position.y, 1.0, 1.0);
       } else {
         color = vec4(0.0, 0.0, 0.0, 1.0);
