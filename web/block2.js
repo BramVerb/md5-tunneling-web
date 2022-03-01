@@ -591,6 +591,7 @@ function Block2() {
             B0 = BB0;
             C0 = CC0;
             D0 = DD0;
+            console.log("A0", A0 >>> 0);
 
             // I save both second blocks
             for (i = 0; i < 16; i++) {

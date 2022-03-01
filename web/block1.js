@@ -9,6 +9,38 @@ const v1 = newArray(128);
 const v2 = newArray(128);
 let A0, B0, C0, D0, A1, B1, C1, D1;
 
+// Mask generation for tunnel Q4 - 1 bit
+const Q4_mask_bits = [26];
+const Q4_strength = 1;
+const mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
+
+// Mask generation for tunnel Q9 - 3 bits
+const Q9_mask_bits = [22, 23, 24];
+const Q9_strength = 3;
+const mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits);
+
+// Mask generation for tunnel Q13 - 12 bits
+const Q13_mask_bits = [2, 3, 5, 7, 10, 11, 12, 21, 22, 23, 28, 29];
+const Q13_strength = 12;
+const mask_Q13 = generate_mask(Q13_strength, Q13_mask_bits);
+
+// Mask generation for tunnel Q20 - 6 bits
+const Q20_mask_bits = [1, 2, 10, 15, 22, 24];
+const Q20_strength = 6;
+const mask_Q20 = generate_mask(Q20_strength, Q20_mask_bits);
+
+// Mask generation for tunnel Q10 - 3 bits
+const Q10_mask_bits = [11, 25, 27];
+const Q10_strength = 3;
+const mask_Q10 = generate_mask(Q10_strength, Q10_mask_bits);
+
+// Mask generation for tunnel Q14 - 9 bits
+const Q14_mask_bits = [1, 2, 3, 5, 6, 7, 27, 28, 29];
+const Q14_strength = 9;
+const mask_Q14 = generate_mask(Q14_strength, Q14_mask_bits);
+
+
+
 function Block1() {
   const IV1 = 0x67452301;
   const IV2 = 0xefcdab89;
@@ -58,36 +90,6 @@ function Block1() {
     CC1 = 0,
     DD1 = 0;
 
-  // Mask generation for tunnel Q4 - 1 bit
-  const Q4_mask_bits = [26];
-  const Q4_strength = 1;
-  const mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
-
-  // Mask generation for tunnel Q9 - 3 bits
-  const Q9_mask_bits = [22, 23, 24];
-  const Q9_strength = 3;
-  const mask_Q9 = generate_mask(Q9_strength, Q9_mask_bits);
-
-  // Mask generation for tunnel Q13 - 12 bits
-  const Q13_mask_bits = [2, 3, 5, 7, 10, 11, 12, 21, 22, 23, 28, 29];
-  const Q13_strength = 12;
-  const mask_Q13 = generate_mask(Q13_strength, Q13_mask_bits);
-
-  // Mask generation for tunnel Q20 - 6 bits
-  const Q20_mask_bits = [1, 2, 10, 15, 22, 24];
-  const Q20_strength = 6;
-  const mask_Q20 = generate_mask(Q20_strength, Q20_mask_bits);
-
-  // Mask generation for tunnel Q10 - 3 bits
-  const Q10_mask_bits = [11, 25, 27];
-  const Q10_strength = 3;
-  const mask_Q10 = generate_mask(Q10_strength, Q10_mask_bits);
-
-  // Mask generation for tunnel Q14 - 9 bits
-  const Q14_mask_bits = [1, 2, 3, 5, 6, 7, 27, 28, 29];
-  const Q14_strength = 9;
-  const mask_Q14 = generate_mask(Q14_strength, Q14_mask_bits);
-
   // Initialization vectors
   QM3 = IV1;
   QM0 = IV2;
@@ -96,7 +98,7 @@ function Block1() {
 
   // Start block 1 generation.
   // TO-DO: add a time limit for collision search.
-  for (let it = 0; it < 100000; it++) {
+  for (let it = 0; it < 10000; it++) {
     // Q[1]  = .... .... .... .... .... .... .... ....
     // RNG   = **** **** **** **** **** **** **** ****  0xffffffff
     // 0     = .... .... .... .... .... .... .... ....  0x00000000
@@ -323,7 +325,7 @@ function Block1() {
     tmp_q14 = Q[14];
     tmp_q20 = Q[20];
     tmp_q21 = Q[21];
-    printHx(Q);
+    // printHx(Q);
 
     ///////////////////////////////////////////////////////////////
     ///                       Tunnel Q10                         //
@@ -331,7 +333,7 @@ function Block1() {
     // Tunnel Q10 - 3 bits - Probabilistic. Modifications on x[10] disturb
     // probabilistically conditions for Q[22-24]
     for (
-      itr_Q10 = 0;
+      itr_Q10 = 6;
       itr_Q10 < (USE_B1_Q10 ? Math.pow(2, Q10_strength) : 1);
       itr_Q10++
     ) {
@@ -444,7 +446,7 @@ function Block1() {
         // Tunnel Q13 - 12 bits - Probabilistic. Modifications on Q[13] and free
         // choice of Q[2] lead to change in x[1..5] and x[15]
         for (
-          itr_Q13 = 0;
+          itr_Q13 = 1920;
           itr_Q13 < (USE_B1_Q13 ? Math.pow(2, Q13_strength) : 1);
           itr_Q13++
         ) {
@@ -575,6 +577,7 @@ function Block1() {
             itr_Q14 < (USE_B1_Q14 ? Math.pow(2, Q14_strength) : 1);
             itr_Q14++
           ) {
+            // console.log("Q14", itr_Q14);
             // Q14 is modified according to its mask {1, 2, 3, 5, 6, 7, 27, 28,
             // 29} NOTE that const_unmasked consider carries. So operations are
             // +,- and not XOR.
@@ -875,8 +878,7 @@ function Block1() {
                 let obj = createMD5Object();
                 let { Hx } = obj;
                 for (i = 0; i < 16; i++) Hx[i] = x[i];
-                printHx(Hx);
-                console.log("WHERE DOES HX COME FROM");
+                // printHx(Hx);
 
                 Hx[4] = x[4] + 0x80000000;
                 Hx[11] = x[11] + 0x00008000;

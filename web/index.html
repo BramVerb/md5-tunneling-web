@@ -16,24 +16,42 @@
   <body>
     <h1>MD5 Tunneling Attack</h1>
     <section>
-      <h2>Inputs</h2>
+      <h2 class="active" id="inputs">Inputs</h2>
       <label for="seed"
              >Seed (in hex)
-             <input id="seed" type="text" default="4" />
+             <input id="seed" type="text" value="4" />
       </label>
         <button id="start">Start</button>
     </section>
     <section>
       <h2>Output</h2>
-      <p></p>
+      <h3 id="block1">Block 1</h3>
+      <p id="block1-content"></p>
+      <h3 id="block2">Block 2</h3>
+      <p id="block2-content"> </p>
+      <h3 id="hash">Hash</h3>
+      <p id="hash-content"></p>
+      <h3 id="files">Files</h3>
+      <p id="files-content"></p>
     </section>
     <section>
-      <canvas id="canvas" width="256", height="256"></canvas>
+      <!-- <canvas id="canvas" width="256", height="256"></canvas> -->
     </section>
 <style>
 canvas {
   border: 1px solid black;
 }
+.active:before {
+  content: "> ";
+}
+ a {
+   padding: 10px;
+   border: 1px solid black;
+   margin-right: 10px;
+ }
+
 </style>
   </body>
 </html>
+
+

@@ -200,17 +200,16 @@ u32 mask_Q(int strength, int[12] mask_bits, u32 i) {
         mask = mask ^ (((i >> j) & 1u) << (mask_bits[j]-1));
     return mask;
 }
-
+u32 Q[65];
 int Block1(uint id) {
 
-  u32 Q[65], x[16], QM0, QM1, QM2, QM3;
+  u32 x[16], QM0, QM1, QM2, QM3;
   u32 sigma_Q19, sigma_Q20, sigma_Q23, sigma_Q35, sigma_Q62;
   u32 i, itr_Q9, itr_Q4, itr_Q14, itr_Q13, itr_Q20, itr_Q10;
   u32 tmp_q3, tmp_q4, tmp_q13, tmp_q14, tmp_q20, tmp_q21, tmp_q9, tmp_q10;
   u32 tmp_x1, tmp_x15, tmp_x4;
   u32 Q3_fix, Q4_fix, Q14_fix, const_masked, const_unmasked;
   u32 AA0, BB0, CC0, DD0, AA1, BB1, CC1, DD1;
-
 
   //Mask generation for tunnel Q4 - 1 bit
   int Q4_mask_bits[] = int[]( 26 );
@@ -243,12 +242,18 @@ int Block1(uint id) {
   int Q20_strength = 6;
   /* const u32 * mask_Q20 = generate_mask(Q20_strength, Q20_mask_bits); */ 
   u32 mask_Q20[] = uint[]( 0u,1u,2u,3u,512u,513u,514u,515u,16384u,16385u,16386u,16387u,16896u,16897u,16898u,16899u,2097152u,2097153u,2097154u,2097155u,2097664u,2097665u,2097666u,2097667u,2113536u,2113537u,2113538u,2113539u,2114048u,2114049u,2114050u,2114051u,8388608u,8388609u,8388610u,8388611u,8389120u,8389121u,8389122u,8389123u,8404992u,8404993u,8404994u,8404995u,8405504u,8405505u,8405506u,8405507u,10485760u,10485761u,10485762u,10485763u,10486272u,10486273u,10486274u,10486275u,10502144u,10502145u,10502146u,10502147u,10502656u,10502657u,10502658u,10502659u);
+  /* u32 startQ20 = id & ((1u << Q20_strength) - 1u); */
+  /* u32 endQ20 = startQ20 + 1u; // (USE_B1_Q20 ? pow2(Q20_strength) : 1u); */
+  /* id = id >> Q20_strength; */
 
   //Mask generation for tunnel Q10 - 3 bits
   int Q10_mask_bits[] = int[]( 11, 25, 27 );
   int Q10_strength = 3;
   /* const u32 * mask_Q10 = generate_mask(Q10_strength, Q10_mask_bits); */ 
   u32 mask_Q10[] = uint[](0u,1024u,16777216u,16778240u,67108864u,67109888u,83886080u,83887104u);
+  /* u32 startQ10 = id & ((1u << Q10_strength) - 1u); */
+  /* u32 endQ10 = startQ10 + 1u; // (USE_B1_Q10 ? pow2(Q10_strength) : 1u); */
+  /* id = id >> Q10_strength; */
 
   //Mask generation for tunnel Q14 - 9 bits
   int Q14_mask_bits[] = int[]( 1, 2, 3, 5, 6, 7, 27, 28, 29 );
@@ -264,6 +269,7 @@ int Block1(uint id) {
   //Start block 1 generation. 
   //TO-DO: add a time limit for collision search.
   for(int it = 0; it < 1; it++) {
+    /* return 0; */
 
     // Q[1]  = .... .... .... .... .... .... .... .... 
     // RNG   = **** **** **** **** **** **** **** ****  0xffffffff
@@ -960,6 +966,7 @@ int Block1(uint id) {
       } //End of Q10 Tunnel
     } //End of general for
   return(-1); //Collision not found;
+  /* return 0; */
 }
 
 
@@ -977,7 +984,8 @@ void main() {
     /* for(int i = 0; i < 100000; i++) { */
     /*   HMD5Tr(); */
     /* } */
-    X = 3770369038u;
+    /* X = 3770369038u; */
+    X = 0x19281u;
     IV1 = 0x67452301u;
     IV2 = 0xefcdab89u;
     IV3 = 0x98badcfeu;
@@ -989,10 +997,11 @@ void main() {
     u32 id = x + y * 256u;
     /* X = 4u; */
     /* if(x <= 100u && y <= 100u) { */
-      if (Block1(id) == 0) {
-        color = vec4(0.5+position.x, 0.5+position.y, 1.0, 1.0);
-      } else {
-        color = vec4(0.0, 0.0, 0.0, 1.0);
-      }
+    if (Block1(id) == 0) {
+      color = vec4(0.5+position.x, 0.5+position.y, 1.0, 1.0);
+    } else {
+      color = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    /* color.z = float(Q[0])/256.0; */
     /* } */
 }

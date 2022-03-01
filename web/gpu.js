@@ -171,4 +171,4 @@ function gpu() {
   const quad = initBuffers(gl)
   drawScene(gl, programInfo, quad);
 }
-gpu();
+// gpu();

@@ -148,7 +148,7 @@ function generate_mask(strength, mask_bits) {
     for (let i = 0; i < mask_cardinality; i++)
       for (let j = 0; j < strength; j++)
         mask[i] = mask[i] ^ (((i >>> j) & 1) << (mask_bits[j] - 1));
-    console.log(`For strength: ${strength} mask_bits: ${mask_bits} mask: ${mask}`)
+    // console.log(`For strength: ${strength} mask_bits: ${mask_bits} mask: ${mask}`)
     return mask;
   } else {
     throw new Error("Uncorrect parameters in mask generation");
