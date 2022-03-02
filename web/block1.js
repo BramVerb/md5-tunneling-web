@@ -333,7 +333,7 @@ function Block1() {
     // Tunnel Q10 - 3 bits - Probabilistic. Modifications on x[10] disturb
     // probabilistically conditions for Q[22-24]
     for (
-      itr_Q10 = 6;
+      itr_Q10 = 0;
       itr_Q10 < (USE_B1_Q10 ? Math.pow(2, Q10_strength) : 1);
       itr_Q10++
     ) {
@@ -446,7 +446,7 @@ function Block1() {
         // Tunnel Q13 - 12 bits - Probabilistic. Modifications on Q[13] and free
         // choice of Q[2] lead to change in x[1..5] and x[15]
         for (
-          itr_Q13 = 1920;
+          itr_Q13 = 0;
           itr_Q13 < (USE_B1_Q13 ? Math.pow(2, Q13_strength) : 1);
           itr_Q13++
         ) {

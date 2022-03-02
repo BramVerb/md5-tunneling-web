@@ -21,6 +21,7 @@ function step1() {
   }
   console.timeEnd("Block1");
   document.getElementById("block1").classList.remove("active");
+  document.getElementById("block1").innerHTML += " - DONE";
   document.getElementById("block2").classList.add("active");
   setTimeout(step2, 100);
 }
@@ -37,6 +38,7 @@ function step2() {
 
 function stepHash() {
   document.getElementById("block2").classList.remove("active");
+  document.getElementById("block2").innerHTML += " - DONE";
   document.getElementById("hash").classList.add("active");
   let obj = createMD5Object();
   obj.Hx[0] = 0x00000080;
@@ -58,12 +60,14 @@ function stepHash() {
 
 function end() {
   document.getElementById("hash").classList.remove("active");
+  document.getElementById("hash").innerHTML += " - DONE";
   document.getElementById("files").classList.add("active");
   const a1 = createFileDownload(v1, "File 1", "file1.txt");
   const a2 = createFileDownload(v2, "File 2", "file1.txt");
   document.getElementById("files-content").appendChild(a1);
   document.getElementById("files-content").appendChild(a2);
   document.getElementById("start").removeAttribute("disabled");
+  document.getElementById("files").innerHTML += " - DONE";
 }
 
 function start() {
