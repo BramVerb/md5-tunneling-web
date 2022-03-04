@@ -125,11 +125,6 @@ function drawScene(gl, programInfo, buffers) {
 
   // Set the shader uniforms
 
-  // gl.uniformMatrix4fv(
-  //     programInfo.uniformLocations.projectionMatrix,
-  //     false,
-  //     projectionMatrix);
-
   {
     const offset = 0;
     const vertexCount = 4;
@@ -137,50 +132,115 @@ function drawScene(gl, programInfo, buffers) {
   }
 }
 
-
-function frame() {
-}
+function frame() {}
 
 class Renderer {
   constructor() {
     const canvas = document.getElementById("canvas");
     this.gl = canvas.getContext("webgl2");
-    if (gl == null) {
+    this.gl.imageSmoothingEnabled = false;
+    if (this.gl == null) {
       alert("unable to init opengl");
       return;
     }
     // Set clear color to black, fully opaque
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     // Clear the color buffer with specified clear color
-    this.gl.clear(gl.COLOR_BUFFER_BIT);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     console.log(this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION));
 
     const vshader = getSourceSynch("vshader.vs");
     const fshader = getSourceSynch("fshader.fs");
     this.shaderProgram = initShaderProgram(this.gl, vshader, fshader);
     this.programInfo = {
-      program: shaderProgram,
+      program: this.shaderProgram,
       attribLocations: {
-        vertexPosition: this.gl.getAttribLocation(this.shaderProgram, "vertexPosition"),
+        vertexPosition: this.gl.getAttribLocation(
+          this.shaderProgram,
+          "vertexPosition"
+        ),
       },
       uniformLocations: {
         // projectionMatrix: gl.getUniformLocation(
         //   shaderProgram,
         //   "uProjectionMatrix"
         // ),
-        // modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
+        seed: this.gl.getUniformLocation(this.shaderProgram, "seed"),
       },
     };
     this.quad = initBuffers(this.gl);
+    this.generator = new Block1CandidatesGenerator(401223190239012);
+    this.collisions = [];
   }
 
-  setupScene(){
+  setupScene() {
+    // const seed = 2382399738;
+    // const seed = 4;
+    // const seed = 3770369038;
+    const candidate = this.generator.getnext(10000000);
+    if (candidate) {
+      const seed = candidate.seed;
+      // const seed = 489166028;
+      this.gl.useProgram(this.programInfo.program);
+      this.gl.uniform1ui(this.programInfo.uniformLocations.seed, seed >>> 0);
+    } else {
+      console.log("found no candidate");
+      return false;
+    }
+    // gl.uniformMatrix4fv(
+    //     programInfo.uniformLocations.projectionMatrix,
+    //     false,
+    //     projectionMatrix);
+
+    // A0 13732443
+    // A0 1481994324
+  }
+
+  readFrame() {
+    // console.log('reading frame');
+    const width = 256;
+    const height = 256;
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let v = 0;
+        let found = false;
+        for (let i = 0; i < 4; i++) {
+          const index = x * 4 + y * width * 4 + i;
+          const value = this.pixelValues[index];
+          if (value > 0) {
+            if (i !== 3) {
+              v += value << (8 * i);
+            }
+            found = true;
+          }
+        }
+        if (v > 0) {
+          console.log(`v at x=${x}, y=${y}: ${v >>> 0}`);
+          this.collisions.push({ x, y, v });
+        }
+      }
+    }
+    console.log("collisions:", this.collisions.length);
+    // console.log('done reading frame');
   }
 
   frame() {
-    setupScene();
+    this.setupScene();
     drawScene(this.gl, this.programInfo, this.quad);
-    // requestAnimationFrame(this.frame.bind(this));
+    this.pixelValues = new Uint8Array(256 * 256 * 4);
+    this.gl.readPixels(
+      0,
+      0,
+      256,
+      256,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      this.pixelValues
+    );
+    this.readFrame();
+    // requestAnimationFrame(this.readFrame.bind(this));
+    requestAnimationFrame(this.frame.bind(this));
+    this.next = new Promise((resolve, reject) => {});
   }
 }
 
@@ -188,4 +248,4 @@ function gpu() {
   const renderer = new Renderer();
   renderer.frame();
 }
-// gpu();
+// setTimeout(gpu, 100);

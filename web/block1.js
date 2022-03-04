@@ -47,7 +47,7 @@ class Block1CandidatesGenerator {
   }
 
   rng() {
-    this.X = ((1664525 * this.X + 1013904223) & 0xffffffff) >>> 0;
+    this.X = ((1664525 * this.X + 1013904223) & 0xffffffff);
     //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
 
     return this.X;
@@ -72,8 +72,12 @@ class Block1CandidatesGenerator {
     let sigma_Q20 = 0;
     let sigma_Q23 = 0;
 
+    let lastSeed = this.X;
+    let nowSeed = this.X;
     for (let it = 0; it < max_iterations; it++) {
-      console.log("getnext", it, max_iterations);
+      const seedNow = this.X >>> 0;
+      lastSeed = nowSeed;
+      nowSeed = seedNow;
       // Q[1]  = .... .... .... .... .... .... .... ....
       // RNG   = **** **** **** **** **** **** **** ****  0xffffffff
       // 0     = .... .... .... .... .... .... .... ....  0x00000000
@@ -185,39 +189,22 @@ class Block1CandidatesGenerator {
       Q[17] = ((rng() & 0x3ffd7ff7) + 0x40000000 + (Q[16] & 0x80008008));
 
       // Start message creation
-      x[0] = (RR(Q[1] - QM0, 7) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478) >>> 0;
+      x[0] = (RR(Q[1] - QM0, 7) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478);
       x[1] =
-        (RR(Q[17] - Q[16], 5) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562) >>>
+        (RR(Q[17] - Q[16], 5) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562);
         0;
-      x[4] =
-        (RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf) >>> 0;
-      x[5] =
-        (RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62a) >>> 0;
-      x[6] =
-        (RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613) >>> 0;
-      x[10] =
-        (RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1) >>>
-        0;
-      x[11] =
-        (RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be) >>>
-        0;
-      x[15] =
-        (RR(Q[16] - Q[15], 22) -
-          F(Q[15], Q[14], Q[13]) -
-          Q[12] -
-          0x49b40821) >>>
-        0;
+      x[4] = (RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf);
+      x[5] = (RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62a);
+      x[6] = (RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613);
+      x[10] = (RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1);
+      x[11] = (RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be);
+      x[15] = (RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821);
 
       // Q[2] = .... .... .... .... .... .... .... ....
-      Q[2] =
-        ((Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756, 12)) >>> 0) >>>
-        0;
+      Q[2] = ((Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756, 12)));
 
       // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Q[18] =
-        ((Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9)) >>>
-          0) >>>
-        0;
+      Q[18] = ((Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9)));
 
       // Q[17] = ^1v. .... .... ..0. ^... .... .... ^...
       // Q[18] = ^.^. .... .... ..1. .... .... .... ....
@@ -285,6 +272,8 @@ class Block1CandidatesGenerator {
       return {
         x,
         Q,
+        it,
+        seed: lastSeed,
       };
     }
     return null;
@@ -347,9 +336,12 @@ function Block1() {
   for (let it = 0; it < 10000; it++) {
     let candidate = candidateGenerator.getnext(10000);
     X = candidateGenerator.X;
+    console.log('X', X >>> 0);
+    console.log('here', candidate);
     if (!candidate) {
       return -1;
     }
+    console.log('seed', candidate.seed >>> 0);
     let { x, Q } = candidate;
     tmp_x1 = x[1];
     tmp_x4 = x[4];
@@ -954,6 +946,7 @@ function Block1() {
                 B1 = BB1;
                 C1 = CC1;
                 D1 = DD1;
+                console.log('A0', (A0 & 0xffffff) >>> 0);
 
                 // We store both first blocks
                 for (i = 0; i < 16; i++) {
