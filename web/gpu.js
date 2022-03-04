@@ -169,78 +169,117 @@ class Renderer {
       },
     };
     this.quad = initBuffers(this.gl);
-    this.generator = new Block1CandidatesGenerator(401223190239012);
+    this.generator = new Block1CandidatesGenerator(4);
     this.collisions = [];
+    this.pixelValues = new Uint8Array(256 * 256 * 4);
+    this.start = Date.now();
+    this.last = Date.now()+1;
+    this.frames = 0;
+    this.next = this.generator.getnext(100000);
   }
 
   setupScene() {
-    // const seed = 2382399738;
-    // const seed = 4;
-    // const seed = 3770369038;
-    const candidate = this.generator.getnext(10000000);
+    const candidate = this.next;
     if (candidate) {
       const seed = candidate.seed;
-      // const seed = 489166028;
       this.gl.useProgram(this.programInfo.program);
       this.gl.uniform1ui(this.programInfo.uniformLocations.seed, seed >>> 0);
     } else {
-      console.log("found no candidate");
-      return false;
+      console.warn("found no candidate");
     }
-    // gl.uniformMatrix4fv(
-    //     programInfo.uniformLocations.projectionMatrix,
-    //     false,
-    //     projectionMatrix);
+  }
 
-    // A0 13732443
-    // A0 1481994324
+  determineTunnelValues(x, y, output, seed) {
+    let id = (x + y * 256) >>> 0;
+
+    const Q4_strength = 1;
+    const startQ4 = id & ((1 << Q4_strength) - 1);
+    id = id >>> Q4_strength;
+
+
+    const Q9_strength = 3;
+    const startQ9 = id & ((1 << Q9_strength) - 1);
+    id = id >>> Q9_strength;
+
+    const Q13_strength = 12;
+    const startQ13 = id & ((1 << Q13_strength) - 1);
+    id = id >>> Q13_strength;
+
+    const Q14_strength = 9;
+    const startQ14 = output & ((1 << Q14_strength)-1);
+    output = output >>> Q14_strength;
+    const Q10_strength = 3;
+    const startQ10 = output & ((1 << Q10_strength)-1);
+    output = output >>> Q10_strength;
+    const Q20_strength = 6;
+    const startQ20 = output & ((1 << Q20_strength)-1);
+    output = output >>> Q20_strength;
+    const input = {
+      id,
+      seed,
+      startQ4,
+      startQ9,
+      startQ13,
+      startQ10,
+      startQ20,
+      startQ14,
+    };
+    console.log('collision', Block1(input));
+    const a = String.fromCharCode(...v1.slice(0, 64))
+    const b = String.fromCharCode(...v2.slice(0, 64))
+    newBlock1(a, b);
   }
 
   readFrame() {
-    // console.log('reading frame');
+    this.frames += 1;
     const width = 256;
     const height = 256;
+    const oldLast = this.last;
+    const seed = this.next.seed;
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         let v = 0;
-        let found = false;
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 3; i++) {
           const index = x * 4 + y * width * 4 + i;
           const value = this.pixelValues[index];
           if (value > 0) {
             if (i !== 3) {
               v += value << (8 * i);
+              console.log(v, value);
             }
-            found = true;
           }
         }
         if (v > 0) {
-          console.log(`v at x=${x}, y=${y}: ${v >>> 0}`);
-          this.collisions.push({ x, y, v });
+          console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
+          this.collisions.push({ x, y, v, seed });
+          this.last = Date.now();
+          this.determineTunnelValues(x, y, v, seed);
         }
       }
     }
-    console.log("collisions:", this.collisions.length);
-    // console.log('done reading frame');
+    if(this.last != oldLast) {
+      const seconds = (this.last - this.start) / 1000;
+      console.log("collisions:", this.collisions.length, "in", Math.floor(seconds) , 'persecond: ', this.collisions.length / seconds, "fps:", this.frames / seconds);
+    }
   }
 
   frame() {
-    this.setupScene();
-    drawScene(this.gl, this.programInfo, this.quad);
-    this.pixelValues = new Uint8Array(256 * 256 * 4);
-    this.gl.readPixels(
-      0,
-      0,
-      256,
-      256,
-      this.gl.RGBA,
-      this.gl.UNSIGNED_BYTE,
-      this.pixelValues
-    );
-    this.readFrame();
-    // requestAnimationFrame(this.readFrame.bind(this));
+    if(this.next) {
+      this.setupScene();
+      drawScene(this.gl, this.programInfo, this.quad);
+      this.gl.readPixels(
+        0,
+        0,
+        256,
+        256,
+        this.gl.RGBA,
+        this.gl.UNSIGNED_BYTE,
+        this.pixelValues
+      );
+      this.readFrame();
+    }
+    this.next = this.generator.getnext(100000)
     requestAnimationFrame(this.frame.bind(this));
-    this.next = new Promise((resolve, reject) => {});
   }
 }
 

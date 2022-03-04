@@ -7,6 +7,4 @@ out vec2 position;
 void main(){
     gl_Position = vec4(vertexPosition.xy, 0.0, 1.0);
     position = (vertexPosition + 1.0) / 2.0;
-    position.y = 1.0 - position.y;
-    gl_PointSize = 10.0;
 }

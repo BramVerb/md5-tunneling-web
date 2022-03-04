@@ -54,6 +54,12 @@ u32 Hx[16];
 u32 IV1,IV2,IV3,IV4;
 u32 A0,B0,C0,D0, A1,B1,C1,D1;
 
+u32 tunnel9;
+u32 tunnel4;
+u32 tunnel14;
+u32 tunnel13;
+u32 tunnel20;
+u32 tunnel10;
 
 void HMD5Tr() {
 
@@ -958,7 +964,12 @@ int Block1(uint id) {
                   /*   memcpy( &v1[4*i], &x[i],  4); */ 
                   /*   memcpy( &v2[4*i], &Hx[i], 4); */
                   /* } */
-
+                  tunnel9 = itr_Q9;
+                  tunnel4 = itr_Q4;
+                  tunnel14 = itr_Q14;
+                  tunnel13 = itr_Q13;
+                  tunnel20 = itr_Q20;
+                  tunnel10 = itr_Q10;
                   return it;
 
                 } //End of Q9 Tunnel
@@ -973,62 +984,43 @@ int Block1(uint id) {
 }
 
 highp vec4 return_vec(int r){
-  highp float x = float((r >> 0) & 0xff) / 256.0;
-  highp float y = float((r >> 8) & 0xff) / 256.0;
-  highp float z = float((r >>16) & 0xff) / 256.0;
+  highp float x = float((r >> 0) & 0xff) / 255.0;
+  highp float y = float((r >> 8) & 0xff) / 255.0;
+  highp float z = float((r >>16) & 0xff) / 255.0;
   return vec4(x, y, z, 1.0);
 }
 
-highp vec4 return_vec(highp uint r){
-  highp float x = float((r >> 0) & 0xffu) / 256.0;
-  highp float y = float((r >> 8) & 0xffu) / 256.0;
-  highp float z = float((r >>16) & 0xffu) / 256.0;
+highp vec4 return_vec(uint r){
+  highp float x = float((r >> 0) & 0xffu) / 255.0;
+  highp float y = float((r >> 8) & 0xffu) / 255.0;
+  highp float z = float((r >>16) & 0xffu) / 255.0;
   return vec4(x, y, z, 1.0);
+}
+
+u32 create_return_from_tunnels() {
+  u32 res = 0u;
+  res = res + tunnel20;
+  res = res << 3;
+  res = res + tunnel10;
+  res = res << 9;
+  res = res + tunnel14;
+  return res;
 }
 
 void main() {
-    /* gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); */
     pos = ivec2(position * 256.0);
     u32 x = uint(pos.x);
     u32 y = uint(pos.y);
-    /* if((x & 2u) == 2u) { */
-    /* } else { */
-    /*     color = vec4(1.0, 1.0, position.x, 1.0); */
-    /* } */
-    /* color = vec4(position.x, position.y, 1.0, 1.0); */
-    /* for(int i = 0; i < 100000; i++) { */
-    /*   HMD5Tr(); */
-    /* } */
-    /* X = 3770369038u; */
-    /* X = 0x19281u; */
     X = seed;
     IV1 = 0x67452301u;
     IV2 = 0xefcdab89u;
     IV3 = 0x98badcfeu;
     IV4 = 0x10325476u;
-    // TODO USE this to determine which conditions to check.
-    //
-    //
     u32 id = x + y * 256u;
-    /* X = 4u; */
-    /* if (seed == 489166028u){ */
-    /*   /1* color = vec4(1.0); *1/ */
-    /*   return; */
-    /* } else { */
-    /*   color = vec4(1.0); */
-    /*   /1* return; *1/ */
-    /* } */
-    /* if(x <= 100u && y <= 100u) { */
     int it = Block1(id);
     if (it >= 0) {
-      /* color = vec4(0.5+position.x, 0.5+position.y, 1.0, 1.0); */
-      color = return_vec(it);
-      /* color = return_vec(A0); */
-      /* color = return_vec(1); */
+      color = return_vec(create_return_from_tunnels());
     } else {
-      color = vec4(0.0);
       discard;
     }
-    /* color.z = float(Q[0])/256.0; */
-    /* } */
 }

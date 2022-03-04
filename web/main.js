@@ -102,3 +102,17 @@ document.getElementById("start").addEventListener("click", function () {
   console.timeEnd("full");
 });
 X = 3770369038;
+
+function newBlock1(a, b) {
+  const item = document.createElement('li');
+  const div = document.createElement('div');
+  div.classList.add('block');
+  const divA = document.createElement('div');
+  const divB = document.createElement('div');
+  divA.innerText = a;
+  divB.innerText = b;
+  div.appendChild(divA);
+  div.appendChild(divB);
+  item.appendChild(div);
+  document.getElementById('blocks').appendChild(item)
+}

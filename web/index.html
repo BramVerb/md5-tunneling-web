@@ -37,6 +37,9 @@
     <section>
       <canvas id="canvas" width="256", height="256"></canvas>
     </section>
+    <ol id="blocks">
+    </ol>
+    <div id="bottom"></div>
 <style>
 body {
   font-family: monospace;
@@ -57,6 +60,15 @@ canvas {
    border: 1px solid white;
    margin-right: 10px;
    color: white;
+ }
+ .block {
+   display: flex;
+   margin: 10px;
+   border: 1px solid gray;
+   padding: 10px;
+ }
+ .block > div {
+   flex: 1;
  }
 
 </style>

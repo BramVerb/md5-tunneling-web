@@ -280,12 +280,19 @@ class Block1CandidatesGenerator {
   }
 }
 
-function Block1() {
+function Block1(input) {
   const IV1 = 0x67452301;
   const IV2 = 0xefcdab89;
   const IV3 = 0x98badcfe;
   const IV4 = 0x10325476;
 
+  const startQ4 = input.startQ4 || 0;
+  const startQ9 = input.startQ9 || 0;
+  const startQ13 = input.startQ13 || 0;
+  const startQ10 = input.startQ10 || 0;
+  const startQ20 = input.startQ20 || 0;
+  const startQ14 = input.startQ14 || 0;
+  const seed = input.seed || X;
   // const Q = newArray(65);
   // const x = newArray(16);
   let sigma_Q23 = 0,
@@ -329,11 +336,11 @@ function Block1() {
   const QM1 = IV3;
   const QM2 = IV4;
 
-  let candidateGenerator = new Block1CandidatesGenerator(X);
+  let candidateGenerator = new Block1CandidatesGenerator(seed);
 
   // Start block 1 generation.
   // TO-DO: add a time limit for collision search.
-  for (let it = 0; it < 10000; it++) {
+  for (let it = 0; it < 1; it++) {
     let candidate = candidateGenerator.getnext(10000);
     X = candidateGenerator.X;
     console.log('X', X >>> 0);
@@ -363,7 +370,7 @@ function Block1() {
     // Tunnel Q10 - 3 bits - Probabilistic. Modifications on x[10] disturb
     // probabilistically conditions for Q[22-24]
     for (
-      itr_Q10 = 0;
+      itr_Q10 = startQ10;
       itr_Q10 < (USE_B1_Q10 ? Math.pow(2, Q10_strength) : 1);
       itr_Q10++
     ) {
@@ -414,7 +421,7 @@ function Block1() {
       // Tunnel Q20 - 6 bits - Probabilistic. Modifications on Q[20] and free
       // choice of Q[1] and Q[2] lead to change in x[0] and x[2..5]
       for (
-        itr_Q20 = 0;
+        itr_Q20 = startQ20;
         itr_Q20 < (USE_B1_Q20 ? Math.pow(2, Q20_strength) : 1);
         itr_Q20++
       ) {
@@ -476,7 +483,7 @@ function Block1() {
         // Tunnel Q13 - 12 bits - Probabilistic. Modifications on Q[13] and free
         // choice of Q[2] lead to change in x[1..5] and x[15]
         for (
-          itr_Q13 = 0;
+          itr_Q13 = startQ13;
           itr_Q13 < (USE_B1_Q13 ? Math.pow(2, Q13_strength) : 1);
           itr_Q13++
         ) {
@@ -603,7 +610,7 @@ function Block1() {
 
           // Tunnel Q14 starts
           for (
-            itr_Q14 = 0;
+            itr_Q14 = startQ14;
             itr_Q14 < (USE_B1_Q14 ? Math.pow(2, Q14_strength) : 1);
             itr_Q14++
           ) {
@@ -635,7 +642,7 @@ function Block1() {
             // Tunnel Q4 - 1 bit - Probabilistic tunnel. Modification on
             // Q[4][26] will probably affect Q[24][32]
             for (
-              itr_Q4 = 0;
+              itr_Q4 = startQ4;
               itr_Q4 < (USE_B1_Q4 ? Math.pow(2, Q4_strength) : 1);
               itr_Q4++
             ) {
@@ -677,7 +684,7 @@ function Block1() {
               // eventual change of the i-th bit of Q[9] shouldn't affect the
               // equations for Q[11] and Q[12].
               for (
-                itr_Q9 = 0;
+                itr_Q9 = startQ9;
                 itr_Q9 < (USE_B1_Q9 ? Math.pow(2, Q9_strength) : 1);
                 itr_Q9++
               ) {
@@ -946,22 +953,12 @@ function Block1() {
                 B1 = BB1;
                 C1 = CC1;
                 D1 = DD1;
-                console.log('A0', (A0 & 0xffffff) >>> 0);
 
                 // We store both first blocks
                 for (i = 0; i < 16; i++) {
                   memcpy(v1, 4 * i, x, i, 4);
-                  // TODO what is Hx here?
                   memcpy(v2, 4 * i, Hx, i, 4);
-                  // memcpy(&v1[4 * i], &x[i], 4);
-                  // memcpy(&v2[4 * i], &Hx[i], 4);
                 }
-                console.log(
-                  "Did shifting work correctly:",
-                  v1,
-                  x.map((i) => i >>> 0)
-                );
-
                 return 0;
               } // End of Q9 Tunnel
             } // End of Q4 Tunnel
