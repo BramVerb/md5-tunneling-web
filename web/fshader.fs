@@ -60,6 +60,8 @@ u32 tunnel14;
 u32 tunnel13;
 u32 tunnel20;
 u32 tunnel10;
+u32 tunnel16;
+u32 tunnelq1q2;
 
 void HMD5Tr() {
 
@@ -1144,8 +1146,8 @@ int Block2() {
     // mask_Q1Q2 are all the bits where QM0[i] = QM1[i] and where Q[1][i] =
     // Q[2][i]. These bits will be changed.
     mask_Q1Q2 = (~(QM0 ^ QM1)) & 0x71de77c1u;
-    Q1Q2_strength = 0;
-    for (i = 1; i < 33; i++)
+    Q1Q2_strength = 0u;
+    for (i = 1u; i < 33u; i++)
       Q1Q2_strength += bit(mask_Q1Q2, i);
 
     Q1_fix = Q[1] & ~mask_Q1Q2;
@@ -1160,7 +1162,7 @@ int Block2() {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    for (itr_q16 = 0; itr_q16 < pow(2, 25); itr_q16++) {
+    for (itr_q16 = 0u; itr_q16 < pow2(25); itr_q16++) {
 
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
@@ -1181,9 +1183,9 @@ int Block2() {
       // Q[15] =  *.... ..... ..... .... ..... ..... ...... ....  0x80000000u
       Q[16] = (rng() & 0x4ffc7ff7u) + 0x20018008u + (Q[15] & 0x80000000u);
 
-      x[1] = RR(Q[2] - Q[1], 12) - F(Q[1], QM0, QM1) - QM2 - 0xe8c7b756u;
-      x[6] = RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613u;
-      x[11] = RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7beu;
+      x[1] = RR(Q[2] - Q[1], 12u) - F(Q[1], QM0, QM1) - QM2 - 0xe8c7b756u;
+      x[6] = RR(Q[7] - Q[6], 17u) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613u;
+      x[11] = RR(Q[12] - Q[11], 22u) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7beu;
 
       // Q[17] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // Extra conditions: Σ17,25 ~ Σ17,27 not all 1
@@ -1195,16 +1197,16 @@ int Block2() {
       // Q[16] =  ^.10  ....  ....  ..01  1...  ....  ....  1...
       // Q[17] =  ^.v.  ....  ....  ..0.  1...  ....  ....  1...
       //          1000  0000  0000  0010  1000  0000  0000  1000 0x80028008u
-      Q[17] = Q[16] + RL(sigma_Q17, 5);
+      Q[17] = Q[16] + RL(sigma_Q17, 5u);
 
       if ((Q[17] & 0x80028008u) != (Q[16] & 0x80028008u))
         continue;
 
       // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Q[18] = Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340u, 9);
+      Q[18] = Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340u, 9u);
 
       // Q[18] =  ^.^.  ....  ....  ..1.  ....  ....  ....  ....
-      if (bit(Q[18], 18) != 1)
+      if (bit(Q[18], 18u) != 1u)
         continue;
 
       if ((Q[18] & 0xa0000000u) != (Q[17] & 0xa0000000u))
@@ -1217,24 +1219,24 @@ int Block2() {
       if ((sigma_Q19 & 0x0003fff8u) == 0x0003fff8u)
         continue;
 
-      Q[19] = Q[18] + RL(sigma_Q19, 14);
+      Q[19] = Q[18] + RL(sigma_Q19, 14u);
 
       // Q[19] =  ^...  ....  ....  ..0.  ....  ....  ....  ....
-      if (bit(Q[19], 18) != 0)
+      if (bit(Q[19], 18u) != 0u)
         continue;
 
-      if (bit(Q[19], 32) != bit(Q[18], 32))
+      if (bit(Q[19], 32u) != bit(Q[18], 32u))
         continue;
 
-      x[10] = RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1u;
+      x[10] = RR(Q[11] - Q[10], 17u) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1u;
       x[15] =
-          RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821u;
+          RR(Q[16] - Q[15], 22u) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821u;
 
       ///////////////////////////////////////////////////////////////
       ///                      MMMM Q1/Q2                          //
       ///////////////////////////////////////////////////////////////
       // MMMM Q1/Q2 - variable bits
-      for (itr_q1q2 = 0; itr_q1q2 < pow(2, Q1Q2_strength); itr_q1q2++) {
+      for (itr_q1q2 = 0u; itr_q1q2 < pow2(Q1Q2_strength); itr_q1q2++) {
 
         Q[4] = tmp_q4;
         Q[9] = tmp_q9;
@@ -1244,26 +1246,26 @@ int Block2() {
         Q[1] = (rng() & mask_Q1Q2) + Q1_fix;
         Q[2] = (Q[1] & mask_Q1Q2) + Q2_fix;
 
-        x[0] = RR(Q[1] - QM0, 7) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478u;
+        x[0] = RR(Q[1] - QM0, 7u) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478u;
 
         // Q[20] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ20,30 ~ Σ20,32 not all 0
         // 0xe0000000u =  1110 0000 0000 0000 0000 0000 0000 0000
         sigma_Q20 = G(Q[19], Q[18], Q[17]) + Q[16] + x[0] + 0xe9b6c7aau;
-        if ((sigma_Q20 & 0xe0000000u) == 0)
+        if ((sigma_Q20 & 0xe0000000u) == 0u)
           continue;
 
-        Q[20] = Q[19] + RL(sigma_Q20, 20);
+        Q[20] = Q[19] + RL(sigma_Q20, 20u);
 
         // Q[20] =  ^...  ....  ....  ..v.  ....  ....  ....  ....
-        if (bit(Q[20], 32) != bit(Q[19], 32))
+        if (bit(Q[20], 32u) != bit(Q[19], 32u))
           continue;
 
         // Q[21] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        x[5] = RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62au;
+        x[5] = RR(Q[6] - Q[5], 12u) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62au;
 
         Q[21] =
-            Q[20] + RL(G(Q[20], Q[19], Q[18]) + Q[17] + x[5] + 0xd62f105du, 5);
+            Q[20] + RL(G(Q[20], Q[19], Q[18]) + Q[17] + x[5] + 0xd62f105du, 5u);
 
         // Q[21] =  ^...  ....  ....  ..^.  ....  ....  ....  ....
         //          1000  0000  0000  0010  0000  0000  0000  0000 = 0x80020000u
@@ -1272,246 +1274,245 @@ int Block2() {
 
         // Q[21] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         Q[22] =
-            Q[21] + RL(G(Q[21], Q[20], Q[19]) + Q[18] + x[10] + 0x2441453u, 9);
+            Q[21] + RL(G(Q[21], Q[20], Q[19]) + Q[18] + x[10] + 0x2441453u, 9u);
 
         // Q[22] =  ^...  ....  ....  ....  ....  ....  ....  ....
-        if (bit(Q[22], 32) != bit(Q[21], 32))
+        if (bit(Q[22], 32u) != bit(Q[21], 32u))
           continue;
 
         // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ23,18 = 0
         sigma_Q23 = G(Q[22], Q[21], Q[20]) + Q[19] + x[15] + 0xd8a1e681u;
-        if (bit(sigma_Q23, 18) != 0)
+        if (bit(sigma_Q23, 18u) != 0u)
           continue;
 
-        Q[23] = Q[22] + RL(sigma_Q23, 14);
+        Q[23] = Q[22] + RL(sigma_Q23, 14u);
 
         // Q[23] =  0...  ....  ....  ....  ....  ....  ....  ....
-        if (bit(Q[23], 32) != 0)
+        if (bit(Q[23], 32u) != 0u)
           continue;
 
         // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        x[4] = RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
+        x[4] = RR(Q[5] - Q[4], 7u) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
 
         Q[24] =
-            Q[23] + RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+            Q[23] + RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
         // Q[24] =  1...  ....  ....  ....  ....  ....  ....  ....
-        if (bit(Q[24], 32) != 1)
+        if (bit(Q[24], 32u) != 1u)
           continue;
 
-        x[2] = RR(Q[3] - Q[2], 17) - F(Q[2], Q[1], QM0) - QM1 - 0x242070dbu;
+        x[2] = RR(Q[3] - Q[2], 17u) - F(Q[2], Q[1], QM0) - QM1 - 0x242070dbu;
         x[13] =
-            RR(Q[14] - Q[13], 12) - F(Q[13], Q[12], Q[11]) - Q[10] - 0xfd987193u;
+            RR(Q[14] - Q[13], 12u) - F(Q[13], Q[12], Q[11]) - Q[10] - 0xfd987193u;
         x[14] =
-            RR(Q[15] - Q[14], 17) - F(Q[14], Q[13], Q[12]) - Q[11] - 0xa679438eu;
+            RR(Q[15] - Q[14], 17u) - F(Q[14], Q[13], Q[12]) - Q[11] - 0xa679438eu;
 
         ///////////////////////////////////////////////////////////////
         ///                         MMMM Q4                          //
         ///////////////////////////////////////////////////////////////
         // MMMM Q4 - 6 bits
-        for (itr_q4 = 0; itr_q4 < pow(2, 6); itr_q4++) {
+        for (itr_q4 = 0u; itr_q4 < pow2(6); itr_q4++) {
 
           Q[4] = tmp_q4 ^ mask_Q4[itr_q4];
 
-          x[4] = RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
+          x[4] = RR(Q[5] - Q[4], 7u) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0fafu;
 
           Q[24] = Q[23] +
-                  RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20);
+                  RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8u, 20u);
 
           // Q[24] =  1...  ....  ....  ....  ....  ....  ....  ....
-          if (bit(Q[24], 32) != 1)
+          if (bit(Q[24], 32u) != 1u)
             continue;
 
-          x[3] = RR(Q[4] - Q[3], 22) - F(Q[3], Q[2], Q[1]) - QM0 - 0xc1bdceeeu;
-          x[7] = RR(Q[8] - Q[7], 22) - F(Q[7], Q[6], Q[5]) - Q[4] - 0xfd469501u;
+          x[3] = RR(Q[4] - Q[3], 22u) - F(Q[3], Q[2], Q[1]) - QM0 - 0xc1bdceeeu;
+          x[7] = RR(Q[8] - Q[7], 22u) - F(Q[7], Q[6], Q[5]) - Q[4] - 0xfd469501u;
 
           ///////////////////////////////////////////////////////////////
           ///                       Tunnel Q9                          //
           ///////////////////////////////////////////////////////////////
           // Tunnel Q9 - 8 bits
-          for (itr_q9 = 0; itr_q9 < (USE_B2_Q9 ? pow(2, Q9_strength) : 1);
-               itr_q9++) {
+          for (itr_q9 = 0u; itr_q9 < (USE_B2_Q9 ? pow2(Q9_strength) : 1u); itr_q9++) {
 
-            Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0];
+            Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0u];
 
-            x[8] = RR(Q[9] - Q[8], 7) - F(Q[8], Q[7], Q[6]) - Q[5] - 0x698098d8u;
+            x[8] = RR(Q[9] - Q[8], 7u) - F(Q[8], Q[7], Q[6]) - Q[5] - 0x698098d8u;
             x[9] =
-                RR(Q[10] - Q[9], 12) - F(Q[9], Q[8], Q[7]) - Q[6] - 0x8b44f7afu;
-            x[12] = RR(Q[13] - Q[12], 7) - F(Q[12], Q[11], Q[10]) - Q[9] -
+                RR(Q[10] - Q[9], 12u) - F(Q[9], Q[8], Q[7]) - Q[6] - 0x8b44f7afu;
+            x[12] = RR(Q[13] - Q[12], 7u) - F(Q[12], Q[11], Q[10]) - Q[9] -
                     0x6b901122u;
 
             Q[25] = Q[24] +
-                    RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[9] + 0x21e1cde6u, 5);
+                    RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[9] + 0x21e1cde6u, 5u);
             Q[26] = Q[25] +
-                    RL(G(Q[25], Q[24], Q[23]) + Q[22] + x[14] + 0xc33707d6u, 9);
+                    RL(G(Q[25], Q[24], Q[23]) + Q[22] + x[14] + 0xc33707d6u, 9u);
             Q[27] = Q[26] +
-                    RL(G(Q[26], Q[25], Q[24]) + Q[23] + x[3] + 0xf4d50d87u, 14);
+                    RL(G(Q[26], Q[25], Q[24]) + Q[23] + x[3] + 0xf4d50d87u, 14u);
             Q[28] = Q[27] +
-                    RL(G(Q[27], Q[26], Q[25]) + Q[24] + x[8] + 0x455a14edu, 20);
+                    RL(G(Q[27], Q[26], Q[25]) + Q[24] + x[8] + 0x455a14edu, 20u);
             Q[29] = Q[28] +
-                    RL(G(Q[28], Q[27], Q[26]) + Q[25] + x[13] + 0xa9e3e905u, 5);
+                    RL(G(Q[28], Q[27], Q[26]) + Q[25] + x[13] + 0xa9e3e905u, 5u);
             Q[30] = Q[29] +
-                    RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[2] + 0xfcefa3f8u, 9);
+                    RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[2] + 0xfcefa3f8u, 9u);
             Q[31] = Q[30] +
-                    RL(G(Q[30], Q[29], Q[28]) + Q[27] + x[7] + 0x676f02d9u, 14);
+                    RL(G(Q[30], Q[29], Q[28]) + Q[27] + x[7] + 0x676f02d9u, 14u);
             Q[32] = Q[31] +
-                    RL(G(Q[31], Q[30], Q[29]) + Q[28] + x[12] + 0x8d2a4c8au, 20);
+                    RL(G(Q[31], Q[30], Q[29]) + Q[28] + x[12] + 0x8d2a4c8au, 20u);
             Q[33] = Q[32] +
-                    RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[5] + 0xfffa3942u, 4);
+                    RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[5] + 0xfffa3942u, 4u);
             Q[34] = Q[33] +
-                    RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[8] + 0x8771f681u, 11);
+                    RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[8] + 0x8771f681u, 11u);
 
             // Extra conditions: Σ35,16 = 1
             sigma_Q35 = H(Q[34], Q[33], Q[32]) + Q[31] + x[11] + 0x6d9d6122u;
-            if (bit(sigma_Q35, 16) != 1)
+            if (bit(sigma_Q35, 16u) != 1u)
               continue;
 
-            Q[35] = Q[34] + RL(sigma_Q35, 16);
+            Q[35] = Q[34] + RL(sigma_Q35, 16u);
 
             Q[36] = Q[35] +
-                    RL(H(Q[35], Q[34], Q[33]) + Q[32] + x[14] + 0xfde5380cu, 23);
+                    RL(H(Q[35], Q[34], Q[33]) + Q[32] + x[14] + 0xfde5380cu, 23u);
             Q[37] = Q[36] +
-                    RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[1] + 0xa4beea44u, 4);
+                    RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[1] + 0xa4beea44u, 4u);
             Q[38] = Q[37] +
-                    RL(H(Q[37], Q[36], Q[35]) + Q[34] + x[4] + 0x4bdecfa9u, 11);
+                    RL(H(Q[37], Q[36], Q[35]) + Q[34] + x[4] + 0x4bdecfa9u, 11u);
             Q[39] = Q[38] +
-                    RL(H(Q[38], Q[37], Q[36]) + Q[35] + x[7] + 0xf6bb4b60u, 16);
+                    RL(H(Q[38], Q[37], Q[36]) + Q[35] + x[7] + 0xf6bb4b60u, 16u);
             Q[40] = Q[39] +
-                    RL(H(Q[39], Q[38], Q[37]) + Q[36] + x[10] + 0xbebfbc70u, 23);
+                    RL(H(Q[39], Q[38], Q[37]) + Q[36] + x[10] + 0xbebfbc70u, 23u);
             Q[41] = Q[40] +
-                    RL(H(Q[40], Q[39], Q[38]) + Q[37] + x[13] + 0x289b7ec6u, 4);
+                    RL(H(Q[40], Q[39], Q[38]) + Q[37] + x[13] + 0x289b7ec6u, 4u);
             Q[42] = Q[41] +
-                    RL(H(Q[41], Q[40], Q[39]) + Q[38] + x[0] + 0xeaa127fau, 11);
+                    RL(H(Q[41], Q[40], Q[39]) + Q[38] + x[0] + 0xeaa127fau, 11u);
             Q[43] = Q[42] +
-                    RL(H(Q[42], Q[41], Q[40]) + Q[39] + x[3] + 0xd4ef3085u, 16);
+                    RL(H(Q[42], Q[41], Q[40]) + Q[39] + x[3] + 0xd4ef3085u, 16u);
             Q[44] = Q[43] +
-                    RL(H(Q[43], Q[42], Q[41]) + Q[40] + x[6] + 0x04881d05u, 23);
+                    RL(H(Q[43], Q[42], Q[41]) + Q[40] + x[6] + 0x04881d05u, 23u);
             Q[45] = Q[44] +
-                    RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[9] + 0xd9d4d039u, 4);
+                    RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[9] + 0xd9d4d039u, 4u);
             Q[46] = Q[45] +
-                    RL(H(Q[45], Q[44], Q[43]) + Q[42] + x[12] + 0xe6db99e5u, 11);
+                    RL(H(Q[45], Q[44], Q[43]) + Q[42] + x[12] + 0xe6db99e5u, 11u);
             Q[47] = Q[46] +
-                    RL(H(Q[46], Q[45], Q[44]) + Q[43] + x[15] + 0x1fa27cf8u, 16);
+                    RL(H(Q[46], Q[45], Q[44]) + Q[43] + x[15] + 0x1fa27cf8u, 16u);
             Q[48] = Q[47] +
-                    RL(H(Q[47], Q[46], Q[45]) + Q[44] + x[2] + 0xc4ac5665u, 23);
+                    RL(H(Q[47], Q[46], Q[45]) + Q[44] + x[2] + 0xc4ac5665u, 23u);
 
             // Last sufficient conditions
-            if (bit(Q[48], 32) != bit(Q[46], 32))
+            if (bit(Q[48], 32u) != bit(Q[46], 32u))
               continue;
 
             Q[49] = Q[48] +
-                    RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244u, 6);
+                    RL(I(Q[48], Q[47], Q[46]) + Q[45] + x[0] + 0xf4292244u, 6u);
 
-            if (bit(Q[49], 32) != bit(Q[47], 32))
+            if (bit(Q[49], 32u) != bit(Q[47], 32u))
               continue;
 
             Q[50] = Q[49] +
-                    RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97u, 10);
+                    RL(I(Q[49], Q[48], Q[47]) + Q[46] + x[7] + 0x432aff97u, 10u);
 
-            if (bit(Q[50], 32) != (bit(Q[48], 32) ^ 1))
+            if (bit(Q[50], 32u) != (bit(Q[48], 32u) ^ 1u))
               continue;
 
             Q[51] = Q[50] +
-                    RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7u, 15);
+                    RL(I(Q[50], Q[49], Q[48]) + Q[47] + x[14] + 0xab9423a7u, 15u);
 
-            if (bit(Q[51], 32) != bit(Q[49], 32))
+            if (bit(Q[51], 32u) != bit(Q[49], 32u))
               continue;
 
             Q[52] = Q[51] +
-                    RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039u, 21);
+                    RL(I(Q[51], Q[50], Q[49]) + Q[48] + x[5] + 0xfc93a039u, 21u);
 
-            if (bit(Q[52], 32) != bit(Q[50], 32))
+            if (bit(Q[52], 32u) != bit(Q[50], 32u))
               continue;
 
             Q[53] = Q[52] +
-                    RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3u, 6);
+                    RL(I(Q[52], Q[51], Q[50]) + Q[49] + x[12] + 0x655b59c3u, 6u);
 
-            if (bit(Q[53], 32) != bit(Q[51], 32))
+            if (bit(Q[53], 32u) != bit(Q[51], 32u))
               continue;
 
             Q[54] = Q[53] +
-                    RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92u, 10);
+                    RL(I(Q[53], Q[52], Q[51]) + Q[50] + x[3] + 0x8f0ccc92u, 10u);
 
-            if (bit(Q[54], 32) != bit(Q[52], 32))
+            if (bit(Q[54], 32u) != bit(Q[52], 32u))
               continue;
 
             Q[55] = Q[54] +
-                    RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47du, 15);
+                    RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47du, 15u);
 
-            if (bit(Q[55], 32) != bit(Q[53], 32))
+            if (bit(Q[55], 32u) != bit(Q[53], 32u))
               continue;
 
             Q[56] = Q[55] +
-                    RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1u, 21);
+                    RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1u, 21u);
 
-            if (bit(Q[56], 32) != bit(Q[54], 32))
+            if (bit(Q[56], 32u) != bit(Q[54], 32u))
               continue;
 
             Q[57] = Q[56] +
-                    RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4fu, 6);
+                    RL(I(Q[56], Q[55], Q[54]) + Q[53] + x[8] + 0x6fa87e4fu, 6u);
 
-            if (bit(Q[57], 32) != bit(Q[55], 32))
+            if (bit(Q[57], 32u) != bit(Q[55], 32u))
               continue;
 
             Q[58] = Q[57] +
-                    RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0u, 10);
+                    RL(I(Q[57], Q[56], Q[55]) + Q[54] + x[15] + 0xfe2ce6e0u, 10u);
 
-            if (bit(Q[58], 32) != bit(Q[56], 32))
+            if (bit(Q[58], 32u) != bit(Q[56], 32u))
               continue;
 
             Q[59] = Q[58] +
-                    RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314u, 15);
+                    RL(I(Q[58], Q[57], Q[56]) + Q[55] + x[6] + 0xa3014314u, 15u);
 
-            if (bit(Q[59], 32) != bit(Q[57], 32))
+            if (bit(Q[59], 32u) != bit(Q[57], 32u))
               continue;
 
             Q[60] = Q[59] +
-                    RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1u, 21);
+                    RL(I(Q[59], Q[58], Q[57]) + Q[56] + x[13] + 0x4e0811a1u, 21u);
 
-            if (bit(Q[60], 26) != 0)
+            if (bit(Q[60], 26u) != 0u)
               continue;
 
-            if (bit(Q[60], 32) != (bit(Q[58], 32) ^ 1))
+            if (bit(Q[60], 32u) != (bit(Q[58], 32u) ^ 1u))
               continue;
 
             Q[61] = Q[60] +
-                    RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82u, 6);
+                    RL(I(Q[60], Q[59], Q[58]) + Q[57] + x[4] + 0xf7537e82u, 6u);
 
-            if (bit(Q[61], 26) != 1)
+            if (bit(Q[61], 26u) != 1u)
               continue;
 
-            if (bit(Q[61], 32) != bit(Q[59], 32))
+            if (bit(Q[61], 32u) != bit(Q[59], 32u))
               continue;
 
             // Extra conditions: Σ62,16 ~ Σ62,22 not all 0
             // 0x003f8000u =  0000 0000 0011 1111 1000 0000 0000 0000
             sigma_Q62 = I(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235u;
-            if ((sigma_Q62 & 0x003f8000u) == 0)
+            if ((sigma_Q62 & 0x003f8000u) == 0u)
               continue;
 
-            Q[62] = Q[61] + RL(sigma_Q62, 10);
+            Q[62] = Q[61] + RL(sigma_Q62, 10u);
 
-            if (bit(Q[62], 26) != 1)
+            if (bit(Q[62], 26u) != 1u)
               continue;
 
-            if (bit(Q[62], 32) != bit(Q[60], 32))
+            if (bit(Q[62], 32u) != bit(Q[60], 32u))
               continue;
 
             Q[63] = Q[62] +
-                    RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bbu, 15);
+                    RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bbu, 15u);
 
-            if (bit(Q[63], 26) != 1)
+            if (bit(Q[63], 26u) != 1u)
               continue;
 
-            if (bit(Q[63], 32) != bit(Q[61], 32))
+            if (bit(Q[63], 32u) != bit(Q[61], 32u))
               continue;
 
             Q[64] = Q[63] +
-                    RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391u, 21);
+                    RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391u, 21u);
 
             // Condition not necessary (Sasaki), try to remove
-            if (bit(Q[64], 26) != 1)
+            if (bit(Q[64], 26u) != 1u)
               continue;
 
             // Block 2 is now completed. We verify if the differential path is
@@ -1524,8 +1525,9 @@ int Block2() {
             DD0 = D0 + Q[62];
 
             // Message 2 intermediate hash computation
-            for (i = 0; i < 16; i++)
+            for (i = 0u; i < 16u; i++){
               Hx[i] = x[i];
+            }
 
             Hx[4] = x[4] - 0x80000000u;
             Hx[11] = x[11] - 0x00008000u;
@@ -1543,8 +1545,8 @@ int Block2() {
             CC1 = C1 + c;
             DD1 = D1 + d;
 
-            if (((AA1 - AA0) != 0) || ((BB1 - BB0) != 0) ||
-                ((CC1 - CC0) != 0) || ((DD1 - DD0) != 0))
+            if (((AA1 - AA0) != 0u) || ((BB1 - BB0) != 0u) ||
+                ((CC1 - CC0) != 0u) || ((DD1 - DD0) != 0u))
               continue;
 
             // We have now found a collision!!
@@ -1555,18 +1557,26 @@ int Block2() {
             C0 = CC0;
             D0 = DD0;
 
-            printf("A0 %u \n", A0);
-            printf("Took %d  and %d iterations \n", it, itr_q9);
+            /* printf("A0 %u \n", A0); */
+            /* printf("Took %d  and %d iterations \n", it, itr_q9); */
             // I save both second blocks
-            for (i = 0; i < 16; i++) {
-              memcpy(&v1[64 + (i * 4)], &x[i], 4);
-              memcpy(&v2[64 + (i * 4)], &Hx[i], 4);
-              /* for (int j = 0; j < 4; j++) { */
-              /*   printf("%u, ", v1[64 + 4 * i + j]); */
-              /* } */
-              /* printf("\n"); */
-            }
+            /* for (i = 0; i < 16; i++) { */
+            /*   memcpy(&v1[64 + (i * 4)], &x[i], 4); */
+            /*   memcpy(&v2[64 + (i * 4)], &Hx[i], 4); */
+            /*   /1* for (int j = 0; j < 4; j++) { *1/ */
+            /*   /1*   printf("%u, ", v1[64 + 4 * i + j]); *1/ */
+            /*   /1* } *1/ */
+            /*   /1* printf("\n"); *1/ */
+            /* } */
 
+            tunnel9 = itr_q9;
+            /* tunnel14 = itr_Q14; */
+            /* tunnel13 = itr_Q13; */
+            /* tunnel20 = itr_Q20; */
+            /* tunnel10 = itr_Q10; */
+            tunnel16 = itr_q16;
+            tunnel4 = itr_q4;
+            tunnelq1q2 = itr_q1q2;
             return (0);
 
           }    // End of Tunnel Q9
