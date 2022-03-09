@@ -286,13 +286,13 @@ function Block1(input) {
   const IV3 = 0x98badcfe;
   const IV4 = 0x10325476;
 
-  const startQ4 = input.startQ4 || 0;
-  const startQ9 = input.startQ9 || 0;
-  const startQ13 = input.startQ13 || 0;
-  const startQ10 = input.startQ10 || 0;
-  const startQ20 = input.startQ20 || 0;
-  const startQ14 = input.startQ14 || 0;
-  const seed = input.seed || X;
+  const startQ4 =input && input.startQ4 || 0;
+  const startQ9 =input && input.startQ9 || 0;
+  const startQ13 =input && input.startQ13 || 0;
+  const startQ10 =input && input.startQ10 || 0;
+  const startQ20 =input && input.startQ20 || 0;
+  const startQ14 =input && input.startQ14 || 0;
+  const seed =input && input.seed || X;
   // const Q = newArray(65);
   // const x = newArray(16);
   let sigma_Q23 = 0,

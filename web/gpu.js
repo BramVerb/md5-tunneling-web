@@ -149,9 +149,12 @@ class Renderer {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     console.log(this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION));
 
+    const shared = getSourceSynch("shared.fs");
     const vshader = getSourceSynch("vshader.vs");
-    const fshader = getSourceSynch("fshader.fs");
+    const fshader = shared+getSourceSynch("fshader.fs");
+    const fshader2 = shared+getSourceSynch("fshaderblock2.fs");
     this.shaderProgram = initShaderProgram(this.gl, vshader, fshader);
+    this.shaderProgram2 = initShaderProgram(this.gl, vshader, fshader2);
     this.programInfo = {
       program: this.shaderProgram,
       attribLocations: {
@@ -160,13 +163,49 @@ class Renderer {
           "vertexPosition"
         ),
       },
-      uniformLocations: {
-        // projectionMatrix: gl.getUniformLocation(
-        //   shaderProgram,
-        //   "uProjectionMatrix"
-        // ),
-        seed: this.gl.getUniformLocation(this.shaderProgram, "seed"),
+      uniformLocations: this.getUniforms(["seed"], this.gl, this.shaderProgram),
+      // uniformLocations: {
+      //   // projectionMatrix: gl.getUniformLocation(
+      //   //   shaderProgram,
+      //   //   "uProjectionMatrix"
+      //   // ),
+      //   seed: this.gl.getUniformLocation(this.shaderProgram, "seed"),
+      //   // A0: this.gl.getUniformLocation(this.shaderProgram, "A0"),
+      //   // B0: this.gl.getUniformLocation(this.shaderProgram, "B0"),
+      //   // C0: this.gl.getUniformLocation(this.shaderProgram, "C0"),
+      //   // D0: this.gl.getUniformLocation(this.shaderProgram, "D0"),
+      //   // A1: this.gl.getUniformLocation(this.shaderProgram, "A1"),
+      //   // B1: this.gl.getUniformLocation(this.shaderProgram, "B1"),
+      //   // C1: this.gl.getUniformLocation(this.shaderProgram, "C1"),
+      //   // D1: this.gl.getUniformLocation(this.shaderProgram, "D1"),
+      // },
+    };
+
+
+    this.programInfo2 = {
+      program: this.shaderProgram2,
+      attribLocations: {
+        vertexPosition: this.gl.getAttribLocation(
+          this.shaderProgram2,
+          "vertexPosition"
+        ),
       },
+      uniformLocations: this.getUniforms(["seed"], this.gl, this.shaderProgram2),
+      // {
+      //   // projectionMatrix: gl.getUniformLocation(
+      //   //   shaderProgram,
+      //   //   "uProjectionMatrix"
+      //   // ),
+      //   seed: this.gl.getUniformLocation(this.shaderProgram2, "seed"),
+      //   // A0: this.gl.getUniformLocation(this.shaderProgram, "A0"),
+      //   // B0: this.gl.getUniformLocation(this.shaderProgram, "B0"),
+      //   // C0: this.gl.getUniformLocation(this.shaderProgram, "C0"),
+      //   // D0: this.gl.getUniformLocation(this.shaderProgram, "D0"),
+      //   // A1: this.gl.getUniformLocation(this.shaderProgram, "A1"),
+      //   // B1: this.gl.getUniformLocation(this.shaderProgram, "B1"),
+      //   // C1: this.gl.getUniformLocation(this.shaderProgram, "C1"),
+      //   // D1: this.gl.getUniformLocation(this.shaderProgram, "D1"),
+      // },
     };
     this.quad = initBuffers(this.gl);
     this.generator = new Block1CandidatesGenerator(4);
@@ -178,15 +217,43 @@ class Renderer {
     this.next = this.generator.getnext(100000);
   }
 
+  getUniforms(uniformNames, gl, shaderProgram) {
+    const uniforms = {};
+    uniformNames.forEach((name) => {
+      uniforms[name] = gl.getUniformLocation(shaderProgram, name);
+    });
+    return uniforms;
+  }
+
   setupScene() {
+    this.gl.useProgram(this.programInfo.program);
+
+    if(this.collisions.length == 100) {
+      // const c = this.collisions.pop();
+      // const {x, y, v, seed} = c;
+      // this.determineTunnelValues(x, y, v, seed);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.seed, seed >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.A0, A0 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.B0, B0 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.C0, C0 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.D0, D0 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.A1, A1 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.B1, B1 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.C1, C1 >>> 0);
+      // this.gl.uniform1ui(this.programInfo.uniformLocations.D1, D1 >>> 0);
+      this.block = 2;
+      return;
+    } else {
+      this.block = 1;
+    }
     const candidate = this.next;
     if (candidate) {
       const seed = candidate.seed;
-      this.gl.useProgram(this.programInfo.program);
       this.gl.uniform1ui(this.programInfo.uniformLocations.seed, seed >>> 0);
     } else {
       console.warn("found no candidate");
     }
+    this.gl.uniform1ui(this.programInfo.uniformLocations.block, this.block >>> 0);
   }
 
   determineTunnelValues(x, y, output, seed) {
@@ -225,9 +292,12 @@ class Renderer {
       startQ14,
     };
     console.log('collision', Block1(input));
-    const a = String.fromCharCode(...v1.slice(0, 64))
-    const b = String.fromCharCode(...v2.slice(0, 64))
-    newBlock1(a, b);
+    // const a = String.fromCharCode(...v1.slice(0, 64))
+    // const b = String.fromCharCode(...v2.slice(0, 64))
+    // newBlock1(a, b);
+    console.time('block 2');
+    // console.log('collision block 2', Block2(input));
+    console.timeEnd('block 2');
   }
 
   readFrame() {
@@ -250,10 +320,14 @@ class Renderer {
           }
         }
         if (v > 0) {
-          console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
-          this.collisions.push({ x, y, v, seed });
-          this.last = Date.now();
-          this.determineTunnelValues(x, y, v, seed);
+          if(this.block === 1) {
+            console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
+            this.collisions.push({ x, y, v, seed });
+            this.last = Date.now();
+            this.determineTunnelValues(x, y, v, seed);
+          } else if(this.block === 2){
+            console.log(`new second block collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
+          }
         }
       }
     }
@@ -264,6 +338,12 @@ class Renderer {
   }
 
   frame() {
+    let error = this.gl.getError();
+    if(error){
+      console.log('gl error', error);
+      return;
+    }
+    console.log('this.frame');
     if(this.next) {
       this.setupScene();
       drawScene(this.gl, this.programInfo, this.quad);
@@ -284,7 +364,14 @@ class Renderer {
 }
 
 function gpu() {
-  const renderer = new Renderer();
-  renderer.frame();
+    console.log('renderer');
+    const renderer = new Renderer();
+    renderer.frame();
 }
-// setTimeout(gpu, 100);
+
+function bottom() {
+    document.getElementById( 'bottom' ).scrollIntoView({behavior: 'smooth'});
+    window.setTimeout( function () { bottom(); }, 1000 );
+};
+// bottom()
+setTimeout(gpu, 100);
