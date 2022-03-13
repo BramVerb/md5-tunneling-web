@@ -214,7 +214,7 @@ function Block2(input) {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    for (itr_q16 = 0; itr_q16 < Math.pow(2, 14); itr_q16++) {
+    for (itr_q16 = 0; itr_q16 < Math.pow(2, 15); itr_q16++) {
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
       Q[4] = tmp_q4;

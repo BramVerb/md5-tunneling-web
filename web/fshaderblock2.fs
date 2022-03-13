@@ -195,7 +195,7 @@ int Block2(uint id) {
     // MMMM Q16 - 25 bits
     /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
     /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
-    for (itr_q16 = 0u; itr_q16 < pow2(14); itr_q16++) {
+    for (itr_q16 = 0u; itr_q16 < pow2(15); itr_q16++) {
     /* for (itr_q16 = 0u; itr_q16 < pow2(11); itr_q16++) { */
 
       Q[1] = tmp_q1;
