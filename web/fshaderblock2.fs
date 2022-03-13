@@ -51,9 +51,6 @@ int Block2(uint id) {
   /* for (i = 0u; i < ((id >> 14u) & 3u); i++){ */
   /*   rng(); */
   /* } */
-  if ((id >> 14u) > 0u){
-    return -1;
-  }
 
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
     // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7dfu
@@ -641,11 +638,10 @@ void main() {
     u32 x = uint(pos.x);
     u32 y = uint(pos.y);
     X = seed;
-    IV1 = 0x67452301u;
-    IV2 = 0xefcdab89u;
-    IV3 = 0x98badcfeu;
-    IV4 = 0x10325476u;
     u32 id = x + y * 256u;
+    if ((id >> 14u) > 0u){
+      discard;
+    }
     /* int it = -1; */
     int it = Block2(id);
     if (it >= 0) {

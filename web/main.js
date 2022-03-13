@@ -7,7 +7,7 @@ const PRINT_FINAL_HASH_IN_SUMMARY = true;
 function createFileDownload(content, text, filename) {
   const a1 = document.createElement("a");
   a1.innerHTML = text;
-  // a1.download = filename;
+  a1.download = filename;
   a1.target ="_blank"
   a1.href = window.URL.createObjectURL(new Blob([new Uint8Array(content)]));
   return a1;
@@ -63,7 +63,7 @@ function end() {
   document.getElementById("hash").innerHTML += " - DONE";
   document.getElementById("files").classList.add("active");
   const a1 = createFileDownload(v1, "File 1", "file1.txt");
-  const a2 = createFileDownload(v2, "File 2", "file1.txt");
+  const a2 = createFileDownload(v2, "File 2", "file2.txt");
   document.getElementById("files-content").appendChild(a1);
   document.getElementById("files-content").appendChild(a2);
   document.getElementById("start").removeAttribute("disabled");
@@ -103,7 +103,7 @@ document.getElementById("start").addEventListener("click", function () {
 });
 X = 3770369038;
 
-function newBlock1(a, b) {
+function newBlock1(a, b, contentA, contentB, hash) {
   const item = document.createElement('li');
   const div = document.createElement('div');
   div.classList.add('block');
@@ -113,6 +113,13 @@ function newBlock1(a, b) {
   divB.innerText = b;
   div.appendChild(divA);
   div.appendChild(divB);
+  const a1 = createFileDownload(contentA, "M0", `m0-${hash}.txt`)
+  const a2 = createFileDownload(contentB, "M1", `m1-${hash}.txt`)
+  const hashP = document.createElement("p");
+  hashP.innerText = hash;
+  item.appendChild(hashP);
+  item.appendChild(a1);
+  item.appendChild(a2);
   item.appendChild(div);
   document.getElementById('blocks').appendChild(item)
 }

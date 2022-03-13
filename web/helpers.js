@@ -208,3 +208,4 @@ function memcpy(a, ai, b, bi, l) {
 }
 
 
+let hash_A0 = 0, hash_B0 = 0, hash_C0 = 0, hash_D0 = 0;

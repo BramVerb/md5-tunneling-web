@@ -353,9 +353,24 @@ class Renderer {
     // console.time('block 2 collision');
     // console.log('collision block 2', Block2());
     // console.timeEnd('block 2 collision');
-    // const a = String.fromCharCode(...v1)
-    // const b = String.fromCharCode(...v2)
-    // newBlock1(a, b);
+    const a = String.fromCharCode(...v1);
+    const b = String.fromCharCode(...v2);
+
+    let obj = createMD5Object();
+    obj.Hx[0] = 0x00000080;
+    obj.Hx[14] = 0x00000400;
+    obj.a = hash_A0;
+    obj.b = hash_B0;
+    obj.c = hash_C0;
+    obj.d = hash_D0;
+    obj = HMD5Tr(obj);
+    hash_A0 += obj.a;
+    hash_B0 += obj.b;
+    hash_C0 += obj.c;
+    hash_D0 += obj.d;
+    const hash = toHex(hash_A0)+toHex(hash_B0)+toHex(hash_C0)+toHex(hash_D0);
+    newBlock1(a, b, v1, v2, hash);
+    console.log(`hash: ${hash}, realhash: ${hash2}`);
     return input;
   }
   readFrame(seed) {

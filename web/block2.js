@@ -603,7 +603,12 @@ function Block2(input) {
             // We have now found a collision!!
 
             // I save the last intermediate hash for final hash computation
-            if(!input) {
+            if(input) {
+              hash_A0 = AA0;
+              hash_B0 = BB0;
+              hash_C0 = CC0;
+              hash_D0 = DD0;
+            } else {
               A0 = AA0;
               B0 = BB0;
               C0 = CC0;
