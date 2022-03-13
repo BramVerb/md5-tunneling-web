@@ -343,12 +343,11 @@ function Block1(input) {
   for (let it = 0; it < 1; it++) {
     let candidate = candidateGenerator.getnext(10000);
     X = candidateGenerator.X;
-    console.log('X', X >>> 0);
-    console.log('here', candidate);
+    // console.log('X', X >>> 0);
     if (!candidate) {
       return -1;
     }
-    console.log('seed', candidate.seed >>> 0);
+    // console.log('seed', candidate.seed >>> 0);
     let { x, Q } = candidate;
     tmp_x1 = x[1];
     tmp_x4 = x[4];

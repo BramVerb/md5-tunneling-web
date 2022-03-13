@@ -236,6 +236,7 @@ class Renderer {
       const { x, y, v, seed } = c;
       this.determineTunnelValues(x, y, v, seed);
       console.error("X", X >>> 0);
+      this.block2seed = X >>> 0;
       this.gl.uniform1ui(programInfo.uniformLocations.seed, X >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.B0, B0 >>> 0);
@@ -313,6 +314,50 @@ class Renderer {
     // newBlock1(a, b);
   }
 
+  determineTunnelValues2(x, y, output) {
+    let id = (x + y * 256) >>> 0;
+
+    const Q4_strength = 6;
+    const startQ4 = id & ((1 << Q4_strength) - 1);
+    id = id >>> Q4_strength;
+
+    const Q9_strength = 9;
+    const startQ9 = id & ((1 << Q9_strength) - 1);
+    // id = id >>> Q9_strength;
+
+    // const Q13_strength = 12;
+    // const startQ13 = id & ((1 << Q13_strength) - 1);
+    // id = id >>> Q13_strength;
+
+    // const Q14_strength = 9;
+    // const startQ14 = output & ((1 << Q14_strength) - 1);
+    // output = output >>> Q14_strength;
+    // const Q10_strength = 3;
+    // const startQ10 = output & ((1 << Q10_strength) - 1);
+    // output = output >>> Q10_strength;
+    // const Q20_strength = 6;
+    // const startQ20 = output & ((1 << Q20_strength) - 1);
+    // output = output >>> Q20_strength;
+    const skip_rng = ((id >>> 14) & 3) >>> 0
+    const input = {
+      id,
+      seed,
+      startQ4,
+      startQ9,
+      skip_rng,
+    };
+    X = this.block2seed;
+    console.time("block 2 collision");
+    console.error(`skip_rng: ${skip_rng} collision block 2 `, Block2(input));
+    console.timeEnd("block 2 collision");
+    // console.time('block 2 collision');
+    // console.log('collision block 2', Block2());
+    // console.timeEnd('block 2 collision');
+    // const a = String.fromCharCode(...v1)
+    // const b = String.fromCharCode(...v2)
+    // newBlock1(a, b);
+    return input;
+  }
   readFrame(seed) {
     this.frames += 1;
     const width = 256;
@@ -338,9 +383,13 @@ class Renderer {
             this.last = Date.now();
             // this.determineTunnelValues(x, y, v, seed);
           } else if (this.block === 2) {
+            let id = (x + y * 256) >>> 0;
+            let count = (id >>> 14) & 3;
+            id = id.toString(2).padStart(16, "0")
             console.warn(
-              `new second block collision: at x=${x}, y=${y}: v: ${v >>> 0}`
+              `new second block collision: at c=${count} x=${x}, y=${y}: v: ${v >>> 0}\tid=${id.toString(2)}`
             );
+            this.determineTunnelValues2(x, y, v);
           }
         }
       }

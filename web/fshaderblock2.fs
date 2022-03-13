@@ -4,12 +4,10 @@ uniform highp uint C1;
 uniform highp uint D1;
 
 u32 create_return_from_second_tunnels() {
-  u32 res = 31u;
-  /* res = res + tunnel20; */
-  /* res = res << 3; */
-  /* res = res + tunnel10; */
-  /* res = res << 9; */
-  /* res = res + tunnel14; */
+  u32 res = 0u;
+  res = res + tunnel9;
+  res = res << 9;
+  res = res + tunnel4;
   return res;
 }
 
@@ -50,8 +48,11 @@ int Block2(uint id) {
   // Start block 2 generation.
   // TO-DO: add a time limit for collision search.
   /* for (int it = 0; it <= 0; it++) { */
-  if(X == 3374575433u && id == 0u) {
-    return 0;
+  /* for (i = 0u; i < ((id >> 14u) & 3u); i++){ */
+  /*   rng(); */
+  /* } */
+  if ((id >> 14u) > 0u){
+    return -1;
   }
 
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
@@ -616,13 +617,13 @@ int Block2(uint id) {
             /* } */
 
             tunnel9 = itr_q9;
+            tunnel4 = itr_q4;
             /* tunnel14 = itr_Q14; */
             /* tunnel13 = itr_Q13; */
             /* tunnel20 = itr_Q20; */
             /* tunnel10 = itr_Q10; */
-            tunnel16 = itr_q16;
-            tunnel4 = itr_q4;
-            tunnelq1q2 = itr_q1q2;
+            /* tunnel16 = itr_q16; */
+            /* tunnelq1q2 = itr_q1q2; */
             return (0);
 
           /* }    // End of Tunnel Q9 */

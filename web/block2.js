@@ -1,6 +1,6 @@
 const USE_B2_Q9 = true;
 
-function Block2() {
+function Block2(input) {
   let Q = newArray(65);
   let x = newArray(16);
   let QM0 = 0,
@@ -52,13 +52,29 @@ function Block2() {
   const Q4_strength = 6;
   const mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
 
+  const itr_q4_start = (input && input.startQ4) || 0;
+  const itr_q4_end = (input && input.startQ4 + 1) || Math.pow(2, 6);
+
+  const itr_q9_start = (input && input.startQ9) || 0;
+  const itr_q9_end =
+    (input && input.startQ9 + 1) || (USE_B2_Q9 ? Math.pow(2, Q9_strength) : 1);
+
   // We extract the 32th bit of B0 and its
   I = QM0 & 0x80000000;
   not_I = ~QM0 & 0x80000000;
 
+  // if(input && input.skip_rng) {
+  //   console.log('skip_rng', input.skip_rng);
+  //   for (let i = 0; i < input.skip_rng; i++){
+  //     rng();
+  //   }
+  // }
+
+
+  // console.warn("BLOCK 2 X: ", X >>> 0);
   // Start block 2 generation.
   // TO-DO: add a time limit for collision search.
-  for (let it = 0; it < 1000; it++) {
+  for (let it = 0; it <= 0; it++) {
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
     // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7df
     // 0     =  ....  *.*.  ....  ....  ....  *...  ..*.  ....  0x0a000820
@@ -198,7 +214,7 @@ function Block2() {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    for (itr_q16 = 0; itr_q16 < Math.pow(2, 25); itr_q16++) {
+    for (itr_q16 = 0; itr_q16 < Math.pow(2, 14); itr_q16++) {
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
       Q[4] = tmp_q4;
@@ -332,7 +348,7 @@ function Block2() {
         ///                         MMMM Q4                          //
         ///////////////////////////////////////////////////////////////
         // MMMM Q4 - 6 bits
-        for (itr_q4 = 0; itr_q4 < Math.pow(2, 6); itr_q4++) {
+        for (itr_q4 = itr_q4_start; itr_q4 < itr_q4_end; itr_q4++) {
           Q[4] = tmp_q4 ^ mask_Q4[itr_q4];
 
           x[4] = RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf;
@@ -351,8 +367,8 @@ function Block2() {
           ///////////////////////////////////////////////////////////////
           // Tunnel Q9 - 8 bits
           for (
-            itr_q9 = 0;
-            itr_q9 < (USE_B2_Q9 ? Math.pow(2, Q9_strength) : 1);
+            itr_q9 = itr_q9_start;
+            itr_q9 < itr_q9_end;
             itr_q9++
           ) {
             Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0];
@@ -587,23 +603,19 @@ function Block2() {
             // We have now found a collision!!
 
             // I save the last intermediate hash for final hash computation
-            A0 = AA0;
-            B0 = BB0;
-            C0 = CC0;
-            D0 = DD0;
-            console.log("A0", A0 >>> 0);
+            if(!input) {
+              A0 = AA0;
+              B0 = BB0;
+              C0 = CC0;
+              D0 = DD0;
+            }
+            // console.log("A0", A0 >>> 0);
 
             // I save both second blocks
             for (i = 0; i < 16; i++) {
               memcpy(v1, 64 + i * 4, x, i, 4);
               memcpy(v2, 64 + i * 4, Hx, i, 4);
             }
-            console.log(
-              "Did shifting work correctly:",
-              v1.slice(64, 128),
-              x.map((i) => i >>> 0)
-            );
-
             return 0;
           } // End of Tunnel Q9
         } // End of MMMM Q4
