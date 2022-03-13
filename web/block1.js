@@ -932,7 +932,7 @@ function Block1(input) {
                 BB1 = (IV2 + obj.b) >>> 0;
                 CC1 = (IV3 + obj.c) >>> 0;
                 DD1 = (IV4 + obj.d) >>> 0;
-                console.log(AA1, BB1, CC1, DD1);
+                // console.log(AA1, BB1, CC1, DD1);
 
                 // We see if the Differential Path is verified,
                 if (

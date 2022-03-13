@@ -103,7 +103,7 @@ document.getElementById("start").addEventListener("click", function () {
 });
 X = 3770369038;
 
-function newBlock1(a, b, contentA, contentB, hash) {
+function newCollision(a, b, contentA, contentB, hash) {
   const item = document.createElement('li');
   const div = document.createElement('div');
   div.classList.add('block');
@@ -115,15 +115,13 @@ function newBlock1(a, b, contentA, contentB, hash) {
   div.appendChild(divB);
   const a1 = createFileDownload(contentA, "M0", `m0-${hash}.txt`)
   const a2 = createFileDownload(contentB, "M1", `m1-${hash}.txt`)
-  const hashP = document.createElement("p");
-  hashP.innerText = hash;
-  item.appendChild(hashP);
-  item.appendChild(a1);
-  item.appendChild(a2);
+  const section = document.createElement("section");
+  const heading = document.createElement("h4");
+  heading.innerText = hash;
+  item.appendChild(section);
+  section.appendChild(heading);
+  section.appendChild(a1);
+  section.appendChild(a2);
   item.appendChild(div);
   document.getElementById('blocks').appendChild(item)
 }
-document.getElementById("gpu").addEventListener("click", function () {
-  document.getElementById("gpu").setAttribute("disabled", true);
-  gpu();
-})

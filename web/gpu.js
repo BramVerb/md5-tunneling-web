@@ -212,7 +212,8 @@ class Renderer {
     };
     this.quad = initBuffers(this.gl);
     this.generator = new Block1CandidatesGenerator(mix(4));
-    this.collisions = [];
+    this.firstBlocks = [];
+    this.fullCollisions = 0;
     this.pixelValues = new Uint8Array(256 * 256 * 4);
     this.start = Date.now();
     this.last = Date.now() + 1;
@@ -229,13 +230,12 @@ class Renderer {
   }
 
   setupScene() {
-    if (this.collisions.length > 0) {
-      const c = this.collisions.pop();
+    if (this.firstBlocks.length > 0) {
+      const c = this.firstBlocks.pop();
       const programInfo = this.programInfo2;
       this.gl.useProgram(programInfo.program);
       const { x, y, v, seed } = c;
       this.determineTunnelValues(x, y, v, seed);
-      console.error("X", X >>> 0);
       this.block2seed = X >>> 0;
       this.gl.uniform1ui(programInfo.uniformLocations.seed, X >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
@@ -246,9 +246,6 @@ class Renderer {
       this.gl.uniform1ui(programInfo.uniformLocations.B1, B1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C1, C1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.D1, D1 >>> 0);
-      // console.time('block 2 collision');
-      // console.log('collision block 2', Block2());
-      // console.timeEnd('block 2 collision');
       this.block = 2;
       return;
     } else {
@@ -302,12 +299,13 @@ class Renderer {
       startQ20,
       startQ14,
     };
-    console.log("determinedTunnelValues");
-    console.time("block 1 collision");
-    console.log("collision", Block1(input));
-    console.timeEnd("block 1 collision");
+    // console.time("block 1 collision");
+    const block1 = Block1(input);
+    if (block1 < 0) {
+      console.error("first block collision not found on the CPU");
+    }
+    // console.timeEnd("block 1 collision");
     // console.time('block 2 collision');
-    // console.log('collision block 2', Block2());
     // console.timeEnd('block 2 collision');
     // const a = String.fromCharCode(...v1)
     // const b = String.fromCharCode(...v2)
@@ -338,7 +336,7 @@ class Renderer {
     // const Q20_strength = 6;
     // const startQ20 = output & ((1 << Q20_strength) - 1);
     // output = output >>> Q20_strength;
-    const skip_rng = ((id >>> 14) & 3) >>> 0
+    const skip_rng = ((id >>> 14) & 3) >>> 0;
     const input = {
       id,
       seed,
@@ -347,9 +345,15 @@ class Renderer {
       skip_rng,
     };
     X = this.block2seed;
-    console.time("block 2 collision");
-    console.error(`skip_rng: ${skip_rng} collision block 2 `, Block2(input));
-    console.timeEnd("block 2 collision");
+    // console.time("block 2 collision");
+    // TODO generate multiple blocks at a time from different collisions
+    const block2 = Block2(input);
+    if (block2 < 0) {
+      console.error("collision block 2 not found on cpu");
+      return;
+    }
+    this.fullCollisions += 1;
+    // console.timeEnd("block 2 collision");
     // console.time('block 2 collision');
     // console.log('collision block 2', Block2());
     // console.timeEnd('block 2 collision');
@@ -368,9 +372,9 @@ class Renderer {
     hash_B0 += obj.b;
     hash_C0 += obj.c;
     hash_D0 += obj.d;
-    const hash = toHex(hash_A0)+toHex(hash_B0)+toHex(hash_C0)+toHex(hash_D0);
-    newBlock1(a, b, v1, v2, hash);
-    console.log(`hash: ${hash}, realhash: ${hash2}`);
+    const hash =
+      toHex(hash_A0) + toHex(hash_B0) + toHex(hash_C0) + toHex(hash_D0);
+    newCollision(a, b, v1, v2, hash);
     return input;
   }
   readFrame(seed) {
@@ -393,17 +397,16 @@ class Renderer {
         }
         if (v > 0) {
           if (this.block === 1) {
-            console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
-            this.collisions.push({ x, y, v, seed });
+            // console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
+            this.firstBlocks.push({ x, y, v, seed });
             this.last = Date.now();
-            // this.determineTunnelValues(x, y, v, seed);
           } else if (this.block === 2) {
             let id = (x + y * 256) >>> 0;
             let count = (id >>> 14) & 3;
-            id = id.toString(2).padStart(16, "0")
-            console.warn(
-              `new second block collision: at c=${count} x=${x}, y=${y}: v: ${v >>> 0}\tid=${id.toString(2)}`
-            );
+            id = id.toString(2).padStart(16, "0");
+            // console.warn(
+            //   `new second block collision: at c=${count} x=${x}, y=${y}: v: ${v >>> 0}\tid=${id.toString(2)}`
+            // );
             this.determineTunnelValues2(x, y, v);
           }
         }
@@ -413,11 +416,11 @@ class Renderer {
       const seconds = (this.last - this.start) / 1000;
       console.log(
         "collisions:",
-        this.collisions.length,
+        this.fullCollisions,
         "in",
         Math.floor(seconds),
         "persecond: ",
-        this.collisions.length / seconds,
+        this.fullCollisions / seconds,
         "fps:",
         this.frames / seconds
       );
@@ -430,7 +433,7 @@ class Renderer {
       console.log("gl error", error);
       return;
     }
-    console.log("this.frame block:", this.block);
+    // console.log("this.frame block:", this.block);
     if (this.next) {
       this.setupScene();
       if (this.block == 1) {
@@ -451,17 +454,24 @@ class Renderer {
       );
       this.readFrame(seed);
     }
-    setTimeout(() => {
-      requestAnimationFrame(this.frame.bind(this));
-    }, 200);
+    // setTimeout(() => {
+    //   requestAnimationFrame(this.frame.bind(this));
+    // }, 200);
+    this.animationFrame = requestAnimationFrame(this.frame.bind(this));
   }
 }
+const renderer = new Renderer();
 
-function gpu() {
-  console.log("renderer");
-  const renderer = new Renderer();
-  renderer.frame();
-}
+document.getElementById("gpu").addEventListener("click", function () {
+  if(renderer.animationFrame) {
+    cancelAnimationFrame(renderer.animationFrame);
+    renderer.animationFrame = undefined;
+    document.getElementById("gpu").innerText = "GPU";
+  } else {
+    document.getElementById("gpu").innerText = "STOP";
+    renderer.frame();
+  }
+})
 
 function bottom() {
   document.getElementById("bottom").scrollIntoView({ behavior: "smooth" });
