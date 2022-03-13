@@ -1,3 +1,8 @@
+uniform highp uint A1;
+uniform highp uint B1;
+uniform highp uint C1;
+uniform highp uint D1;
+
 u32 create_return_from_second_tunnels() {
   u32 res = 31u;
   /* res = res + tunnel20; */
@@ -40,9 +45,14 @@ int Block2(uint id) {
   I = QM0 & 0x80000000u;
   not_I = (~QM0) & 0x80000000u;
 
+  /* X = mix(id); */
+
   // Start block 2 generation.
   // TO-DO: add a time limit for collision search.
-  for (int it = 0; it < 2; it++) {
+  /* for (int it = 0; it <= 0; it++) { */
+  if(X == 3374575433u && id == 0u) {
+    return 0;
+  }
 
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
     // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7dfu
@@ -169,6 +179,7 @@ int Block2(uint id) {
     // Q[2][i]. These bits will be changed.
     mask_Q1Q2 = (~(QM0 ^ QM1)) & 0x71de77c1u;
     Q1Q2_strength = 0u;
+    // Can at most be 19
     for (i = 1u; i < 33u; i++)
       Q1Q2_strength += bit(mask_Q1Q2, i);
 
@@ -184,9 +195,10 @@ int Block2(uint id) {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    X = mix(id);
     /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
-    for (itr_q16 = 0u; itr_q16 < pow2(1); itr_q16++) {
+    /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
+    for (itr_q16 = 0u; itr_q16 < pow2(14); itr_q16++) {
+    /* for (itr_q16 = 0u; itr_q16 < pow2(11); itr_q16++) { */
 
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
@@ -260,8 +272,9 @@ int Block2(uint id) {
       ///                      MMMM Q1/Q2                          //
       ///////////////////////////////////////////////////////////////
       // MMMM Q1/Q2 - variable bits
+      for (itr_q1q2 = 0u; itr_q1q2 < pow2(Q1Q2_strength); itr_q1q2++) {
       /* for (itr_q1q2 = 0u; itr_q1q2 < pow2(Q1Q2_strength); itr_q1q2++) { */
-      for (itr_q1q2 = 0u; itr_q1q2 < pow2(1); itr_q1q2++) {
+      /* for (itr_q1q2 = 0u; itr_q1q2 < pow2(1); itr_q1q2++) { */
 
         Q[4] = tmp_q4;
         Q[9] = tmp_q9;
@@ -270,6 +283,7 @@ int Block2(uint id) {
         // Q[1][i] = Q[2][i]
         Q[1] = (rng() & mask_Q1Q2) + Q1_fix;
         Q[2] = (Q[1] & mask_Q1Q2) + Q2_fix;
+
 
         x[0] = RR(Q[1] - QM0, 7u) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478u;
 
@@ -337,7 +351,10 @@ int Block2(uint id) {
         ///                         MMMM Q4                          //
         ///////////////////////////////////////////////////////////////
         // MMMM Q4 - 6 bits
-        for (itr_q4 = 0u; itr_q4 < pow2(6); itr_q4++) {
+        u32 startq4 = id & ((1u << 6) - 1u);
+        itr_q4 = startq4;
+        /* for (itr_q4 = startq4; itr_q4 <= startq4; itr_q4++) { */
+
 
           Q[4] = tmp_q4 ^ mask_Q4[itr_q4];
 
@@ -357,7 +374,9 @@ int Block2(uint id) {
           ///                       Tunnel Q9                          //
           ///////////////////////////////////////////////////////////////
           // Tunnel Q9 - 8 bits
-          for (itr_q9 = 0u; itr_q9 < (USE_B2_Q9 ? pow2(Q9_strength) : 1u); itr_q9++) {
+          u32 startq9 = (id >> 6) & ((1u << Q9_strength) - 1u);
+          itr_q9 = startq9;
+          /* for (itr_q9 = startq9; itr_q9 <= startq9; itr_q9++) { */
 
             Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0u];
 
@@ -542,6 +561,7 @@ int Block2(uint id) {
 
             // Block 2 is now completed. We verify if the differential path is
             // reached.
+            //
 
             // Message 1 intermediate hash
             AA0 = A0 + Q[61];
@@ -569,6 +589,7 @@ int Block2(uint id) {
             BB1 = B1 + b;
             CC1 = C1 + c;
             DD1 = D1 + d;
+
 
             if (((AA1 - AA0) != 0u) || ((BB1 - BB0) != 0u) ||
                 ((CC1 - CC0) != 0u) || ((DD1 - DD0) != 0u))
@@ -604,11 +625,11 @@ int Block2(uint id) {
             tunnelq1q2 = itr_q1q2;
             return (0);
 
-          }    // End of Tunnel Q9
-        }      // End of MMMM Q4
+          /* }    // End of Tunnel Q9 */
+        /* }      // End of MMMM Q4 */
       }        // End of MMMM Q1/12
     }          // End of MMMM Q16
-  }            // End of general for
+  /* }            // End of general for */
   return (-1); // Collision not found
 }
 
@@ -629,6 +650,7 @@ void main() {
     if (it >= 0) {
       color = return_vec(create_return_from_second_tunnels());
     } else {
+      /* color = return_vec(create_return_from_second_tunnels()); */
       discard;
     }
 }

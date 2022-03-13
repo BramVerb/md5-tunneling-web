@@ -13,12 +13,10 @@ uniform highp uint B0;
 uniform highp uint C0;
 uniform highp uint D0;
 
-
 u32 a,b,c,d;
 u32 Hx[16];
 u32 IV1,IV2,IV3,IV4;
 /* u32 A0,B0,C0,D0; */
-u32 A1,B1,C1,D1;
 
 u32 tunnel9;
 u32 tunnel4;
@@ -86,7 +84,7 @@ u32 mix(u32 a) {
 u32 X;
 u32 rng() {
   X = (1664525u*X + 1013904223u) & 0xffffffffu;
-  //X = (1103515245*X + 12345) & 0xffffffffu;
+  /* X = (1103515245u*X + 12345u) & 0xffffffffu; */
   return X;
 }
 

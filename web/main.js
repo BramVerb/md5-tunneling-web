@@ -116,3 +116,7 @@ function newBlock1(a, b) {
   item.appendChild(div);
   document.getElementById('blocks').appendChild(item)
 }
+document.getElementById("gpu").addEventListener("click", function () {
+  document.getElementById("gpu").setAttribute("disabled", true);
+  gpu();
+})

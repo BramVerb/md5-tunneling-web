@@ -1,3 +1,4 @@
+u32 A1,B1,C1,D1;
 /* u32 * generate_mask(u32 strength, u32 * mask_bits) { */
 
 /*         u32 mask_cardinality = (int32_t) pow2( strength); */

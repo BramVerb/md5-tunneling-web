@@ -151,8 +151,8 @@ class Renderer {
 
     const shared = getSourceSynch("shared.fs");
     const vshader = getSourceSynch("vshader.vs");
-    const fshader = shared+getSourceSynch("fshaderblock1.fs");
-    const fshader2 = shared+getSourceSynch("fshaderblock2.fs");
+    const fshader = shared + getSourceSynch("fshaderblock1.fs");
+    const fshader2 = shared + getSourceSynch("fshaderblock2.fs");
     this.shaderProgram = initShaderProgram(this.gl, vshader, fshader);
     this.shaderProgram2 = initShaderProgram(this.gl, vshader, fshader2);
     this.programInfo = {
@@ -181,7 +181,6 @@ class Renderer {
       // },
     };
 
-
     this.programInfo2 = {
       program: this.shaderProgram2,
       attribLocations: {
@@ -190,7 +189,11 @@ class Renderer {
           "vertexPosition"
         ),
       },
-      uniformLocations: this.getUniforms(["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1"], this.gl, this.shaderProgram2),
+      uniformLocations: this.getUniforms(
+        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1"],
+        this.gl,
+        this.shaderProgram2
+      ),
       // {
       //   // projectionMatrix: gl.getUniformLocation(
       //   //   shaderProgram,
@@ -212,7 +215,7 @@ class Renderer {
     this.collisions = [];
     this.pixelValues = new Uint8Array(256 * 256 * 4);
     this.start = Date.now();
-    this.last = Date.now()+1;
+    this.last = Date.now() + 1;
     this.frames = 0;
     this.next = this.generator.getnext(100000);
   }
@@ -226,14 +229,14 @@ class Renderer {
   }
 
   setupScene() {
-
-    if(this.collisions.length > 1) {
+    if (this.collisions.length > 0) {
       const c = this.collisions.pop();
       const programInfo = this.programInfo2;
       this.gl.useProgram(programInfo.program);
-      // const {x, y, v, seed} = c;
-      // this.determineTunnelValues(x, y, v, seed);
-      this.gl.uniform1ui(programInfo.uniformLocations.seed, seed >>> 0);
+      const { x, y, v, seed } = c;
+      this.determineTunnelValues(x, y, v, seed);
+      console.error("X", X >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.seed, X >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.B0, B0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C0, C0 >>> 0);
@@ -242,6 +245,9 @@ class Renderer {
       this.gl.uniform1ui(programInfo.uniformLocations.B1, B1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C1, C1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.D1, D1 >>> 0);
+      // console.time('block 2 collision');
+      // console.log('collision block 2', Block2());
+      // console.timeEnd('block 2 collision');
       this.block = 2;
       return;
     } else {
@@ -254,7 +260,10 @@ class Renderer {
       } else {
         console.warn("found no candidate");
       }
-      this.gl.uniform1ui(this.programInfo.uniformLocations.block, this.block >>> 0);
+      this.gl.uniform1ui(
+        this.programInfo.uniformLocations.block,
+        this.block >>> 0
+      );
     }
   }
 
@@ -265,7 +274,6 @@ class Renderer {
     const startQ4 = id & ((1 << Q4_strength) - 1);
     id = id >>> Q4_strength;
 
-
     const Q9_strength = 3;
     const startQ9 = id & ((1 << Q9_strength) - 1);
     id = id >>> Q9_strength;
@@ -275,13 +283,13 @@ class Renderer {
     id = id >>> Q13_strength;
 
     const Q14_strength = 9;
-    const startQ14 = output & ((1 << Q14_strength)-1);
+    const startQ14 = output & ((1 << Q14_strength) - 1);
     output = output >>> Q14_strength;
     const Q10_strength = 3;
-    const startQ10 = output & ((1 << Q10_strength)-1);
+    const startQ10 = output & ((1 << Q10_strength) - 1);
     output = output >>> Q10_strength;
     const Q20_strength = 6;
-    const startQ20 = output & ((1 << Q20_strength)-1);
+    const startQ20 = output & ((1 << Q20_strength) - 1);
     output = output >>> Q20_strength;
     const input = {
       id,
@@ -293,21 +301,23 @@ class Renderer {
       startQ20,
       startQ14,
     };
-    // console.log('collision', Block1(input));
-    // const a = String.fromCharCode(...v1.slice(0, 64))
-    // const b = String.fromCharCode(...v2.slice(0, 64))
+    console.log("determinedTunnelValues");
+    console.time("block 1 collision");
+    console.log("collision", Block1(input));
+    console.timeEnd("block 1 collision");
+    // console.time('block 2 collision');
+    // console.log('collision block 2', Block2());
+    // console.timeEnd('block 2 collision');
+    // const a = String.fromCharCode(...v1)
+    // const b = String.fromCharCode(...v2)
     // newBlock1(a, b);
-    // console.time('block 2');
-    // console.log('collision block 2', Block2(input));
-    // console.timeEnd('block 2');
   }
 
-  readFrame() {
+  readFrame(seed) {
     this.frames += 1;
     const width = 256;
     const height = 256;
     const oldLast = this.last;
-    const seed = this.next.seed;
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         let v = 0;
@@ -317,43 +327,55 @@ class Renderer {
           if (value > 0) {
             if (i !== 3) {
               v += value << (8 * i);
-              console.log(v, value);
+              // console.log(v, value);
             }
           }
         }
         if (v > 0) {
-          if(this.block === 1) {
+          if (this.block === 1) {
             console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
             this.collisions.push({ x, y, v, seed });
             this.last = Date.now();
-            this.determineTunnelValues(x, y, v, seed);
-          } else if(this.block === 2){
-            console.log(`new second block collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
+            // this.determineTunnelValues(x, y, v, seed);
+          } else if (this.block === 2) {
+            console.warn(
+              `new second block collision: at x=${x}, y=${y}: v: ${v >>> 0}`
+            );
           }
         }
       }
     }
-    if(this.last != oldLast) {
+    if (this.last != oldLast) {
       const seconds = (this.last - this.start) / 1000;
-      console.log("collisions:", this.collisions.length, "in", Math.floor(seconds) , 'persecond: ', this.collisions.length / seconds, "fps:", this.frames / seconds);
+      console.log(
+        "collisions:",
+        this.collisions.length,
+        "in",
+        Math.floor(seconds),
+        "persecond: ",
+        this.collisions.length / seconds,
+        "fps:",
+        this.frames / seconds
+      );
     }
   }
 
   frame() {
     let error = this.gl.getError();
-    if(error){
-      console.log('gl error', error);
+    if (error) {
+      console.log("gl error", error);
       return;
     }
-    console.log('this.frame');
-    if(this.next) {
+    console.log("this.frame block:", this.block);
+    if (this.next) {
       this.setupScene();
-      if(this.block == 1) {
+      if (this.block == 1) {
         drawScene(this.gl, this.programInfo, this.quad);
       } else {
         drawScene(this.gl, this.programInfo2, this.quad);
-        console.log('drawing', this.block);
       }
+      const seed = this.next.seed;
+      this.next = this.generator.getnext(100000);
       this.gl.readPixels(
         0,
         0,
@@ -363,22 +385,25 @@ class Renderer {
         this.gl.UNSIGNED_BYTE,
         this.pixelValues
       );
-      this.readFrame();
+      this.readFrame(seed);
     }
-    this.next = this.generator.getnext(100000)
-    requestAnimationFrame(this.frame.bind(this));
+    setTimeout(() => {
+      requestAnimationFrame(this.frame.bind(this));
+    }, 200);
   }
 }
 
 function gpu() {
-    console.log('renderer');
-    const renderer = new Renderer();
-    renderer.frame();
+  console.log("renderer");
+  const renderer = new Renderer();
+  renderer.frame();
 }
 
 function bottom() {
-    document.getElementById( 'bottom' ).scrollIntoView({behavior: 'smooth'});
-    window.setTimeout( function () { bottom(); }, 1000 );
-};
+  document.getElementById("bottom").scrollIntoView({ behavior: "smooth" });
+  window.setTimeout(function () {
+    bottom();
+  }, 1000);
+}
 // bottom()
-setTimeout(gpu, 100);
+// setTimeout(gpu, 100);
