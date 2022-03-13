@@ -151,7 +151,7 @@ class Renderer {
 
     const shared = getSourceSynch("shared.fs");
     const vshader = getSourceSynch("vshader.vs");
-    const fshader = shared+getSourceSynch("fshader.fs");
+    const fshader = shared+getSourceSynch("fshaderblock1.fs");
     const fshader2 = shared+getSourceSynch("fshaderblock2.fs");
     this.shaderProgram = initShaderProgram(this.gl, vshader, fshader);
     this.shaderProgram2 = initShaderProgram(this.gl, vshader, fshader2);
@@ -208,7 +208,7 @@ class Renderer {
       // },
     };
     this.quad = initBuffers(this.gl);
-    this.generator = new Block1CandidatesGenerator(4);
+    this.generator = new Block1CandidatesGenerator(mix(4));
     this.collisions = [];
     this.pixelValues = new Uint8Array(256 * 256 * 4);
     this.start = Date.now();
