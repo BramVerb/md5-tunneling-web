@@ -1,5 +1,6 @@
 const USE_B2_Q9 = true;
 
+
 function Block2(input) {
   let Q = newArray(65);
   let x = newArray(16);
@@ -63,13 +64,13 @@ function Block2(input) {
   I = QM0 & 0x80000000;
   not_I = ~QM0 & 0x80000000;
 
-  // if(input && input.skip_rng) {
-  //   console.log('skip_rng', input.skip_rng);
-  //   for (let i = 0; i < input.skip_rng; i++){
-  //     rng();
-  //   }
-  // }
+  if(input && input.skip_rng) {
+    for (let i = 0; i < input.skip_rng; i++){
+      rng();
+    }
+  }
 
+  const NUM_BITS_Q16 = input.NUM_BITS_Q16 || 16;
 
   // console.warn("BLOCK 2 X: ", X >>> 0);
   // Start block 2 generation.
@@ -214,7 +215,7 @@ function Block2(input) {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
-    for (itr_q16 = 0; itr_q16 < Math.pow(2, 15); itr_q16++) {
+    for (itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
       Q[4] = tmp_q4;

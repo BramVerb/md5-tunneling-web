@@ -26,6 +26,15 @@ function step1() {
   setTimeout(step2, 100);
 }
 
+function setSelectedBlock(block) {
+  const activeBlock = block == 1? "block1" : "block2";
+  const inactiveBlock = block == 1? "block2" : "block1";
+  document.getElementById(inactiveBlock).classList.remove("active");
+  document.getElementById(activeBlock).classList.add("active");
+  const now = Date.now();
+  lastTime = now;
+}
+
 function step2() {
   console.time("Block2");
   if (Block2() == -1) {

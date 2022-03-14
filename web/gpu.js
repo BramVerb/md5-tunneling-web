@@ -190,7 +190,7 @@ class Renderer {
         ),
       },
       uniformLocations: this.getUniforms(
-        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1"],
+        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1", "NUM_BITS_Q16"],
         this.gl,
         this.shaderProgram2
       ),
@@ -219,6 +219,12 @@ class Renderer {
     this.last = Date.now() + 1;
     this.frames = 0;
     this.next = this.generator.getnext(100000);
+    this.NUM_BITS_Q16 = 14;
+    this.counter = 0;
+    this.blockTime = {
+      "block1": 0,
+      "block2": 0,
+    };
   }
 
   getUniforms(uniformNames, gl, shaderProgram) {
@@ -231,13 +237,17 @@ class Renderer {
 
   setupScene() {
     if (this.firstBlocks.length > 0) {
-      const c = this.firstBlocks.pop();
+      const c = this.firstBlocks[0];
       const programInfo = this.programInfo2;
       this.gl.useProgram(programInfo.program);
       const { x, y, v, seed } = c;
       this.determineTunnelValues(x, y, v, seed);
-      this.block2seed = X >>> 0;
-      this.gl.uniform1ui(programInfo.uniformLocations.seed, X >>> 0);
+      for(let i = 0; i < 4*this.counter; i++){
+        rng();
+      }
+      this.counter++;
+      this.block2seed = (X >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.seed, this.block2seed >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.B0, B0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C0, C0 >>> 0);
@@ -246,9 +256,10 @@ class Renderer {
       this.gl.uniform1ui(programInfo.uniformLocations.B1, B1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C1, C1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.D1, D1 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.NUM_BITS_Q16, this.NUM_BITS_Q16 >>> 0);
       this.block = 2;
-      return;
     } else {
+      this.counter = 0;
       this.gl.useProgram(this.programInfo.program);
       this.block = 1;
       const candidate = this.next;
@@ -263,6 +274,7 @@ class Renderer {
         this.block >>> 0
       );
     }
+    setSelectedBlock(this.block);
   }
 
   determineTunnelValues(x, y, output, seed) {
@@ -298,6 +310,7 @@ class Renderer {
       startQ10,
       startQ20,
       startQ14,
+      NUM_BITS_Q16: this.NUM_BITS_Q16,
     };
     // console.time("block 1 collision");
     const block1 = Block1(input);
@@ -319,24 +332,10 @@ class Renderer {
     const startQ4 = id & ((1 << Q4_strength) - 1);
     id = id >>> Q4_strength;
 
-    const Q9_strength = 9;
+    const Q9_strength = 8;
     const startQ9 = id & ((1 << Q9_strength) - 1);
-    // id = id >>> Q9_strength;
-
-    // const Q13_strength = 12;
-    // const startQ13 = id & ((1 << Q13_strength) - 1);
-    // id = id >>> Q13_strength;
-
-    // const Q14_strength = 9;
-    // const startQ14 = output & ((1 << Q14_strength) - 1);
-    // output = output >>> Q14_strength;
-    // const Q10_strength = 3;
-    // const startQ10 = output & ((1 << Q10_strength) - 1);
-    // output = output >>> Q10_strength;
-    // const Q20_strength = 6;
-    // const startQ20 = output & ((1 << Q20_strength) - 1);
-    // output = output >>> Q20_strength;
-    const skip_rng = ((id >>> 14) & 3) >>> 0;
+    id = id >>> Q9_strength;
+    const skip_rng = ((id) & 3) >>> 0;
     const input = {
       id,
       seed,
@@ -344,7 +343,7 @@ class Renderer {
       startQ9,
       skip_rng,
     };
-    X = this.block2seed;
+    X = this.block2seed >>> 0;
     // console.time("block 2 collision");
     // TODO generate multiple blocks at a time from different collisions
     const block2 = Block2(input);
@@ -382,6 +381,7 @@ class Renderer {
     const width = 256;
     const height = 256;
     const oldLast = this.last;
+    let goToNextBlock = false;
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         let v = 0;
@@ -396,21 +396,18 @@ class Renderer {
           }
         }
         if (v > 0) {
+          this.last = Date.now();
           if (this.block === 1) {
-            // console.log(`new collision: at x=${x}, y=${y}: v: ${v >>> 0}`);
             this.firstBlocks.push({ x, y, v, seed });
-            this.last = Date.now();
           } else if (this.block === 2) {
-            let id = (x + y * 256) >>> 0;
-            let count = (id >>> 14) & 3;
-            id = id.toString(2).padStart(16, "0");
-            // console.warn(
-            //   `new second block collision: at c=${count} x=${x}, y=${y}: v: ${v >>> 0}\tid=${id.toString(2)}`
-            // );
+            goToNextBlock = true;
             this.determineTunnelValues2(x, y, v);
           }
         }
       }
+    }
+    if(goToNextBlock) {
+      this.firstBlocks.pop();
     }
     if (this.last != oldLast) {
       const seconds = (this.last - this.start) / 1000;
@@ -422,7 +419,8 @@ class Renderer {
         "persecond: ",
         this.fullCollisions / seconds,
         "fps:",
-        this.frames / seconds
+        this.frames / seconds,
+        "blocktime", this.blockTime,
       );
     }
   }
@@ -434,6 +432,7 @@ class Renderer {
       return;
     }
     // console.log("this.frame block:", this.block);
+    const start = Date.now();
     if (this.next) {
       this.setupScene();
       if (this.block == 1) {
@@ -454,6 +453,8 @@ class Renderer {
       );
       this.readFrame(seed);
     }
+    const took = Date.now() - start;
+    this.blockTime["block"+this.block] += took;
     // setTimeout(() => {
     //   requestAnimationFrame(this.frame.bind(this));
     // }, 200);
