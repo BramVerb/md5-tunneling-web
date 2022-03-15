@@ -392,7 +392,6 @@ class Renderer {
           if (value > 0) {
             if (i !== 3) {
               v += value << (8 * i);
-              // console.log(v, value);
             }
           }
         }
@@ -412,23 +411,14 @@ class Renderer {
     }
     if (this.last != oldLast) {
       const seconds = (Date.now() - this.startTime) / 1000;
-      console.log(
-        "collisions:",
-        this.fullCollisions,
-        "in",
-        Math.floor(seconds),
-        "persecond: ",
-        this.fullCollisions / seconds,
-        "fps:",
-        this.frames / seconds,
-        "blocktime", this.blockTime,
-      );
       updateStats({
-        cps: (this.fullCollisions / seconds).toFixed(2),
-        fps: (this.frames / seconds).toFixed(2),
+        cps: (this.fullCollisions / seconds).toFixed(1),
+        fps: (this.frames / seconds).toFixed(1),
         collisions: this.fullCollisions,
         time: seconds.toFixed(1),
-        ...this.blockTime,
+        block1: (this.blockTime.block1 / 1000).toFixed(1),
+        block2: (this.blockTime.block2 / 1000).toFixed(1),
+        avg: (seconds / this.fullCollisions).toFixed(1),
       })
     }
   }

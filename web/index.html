@@ -38,22 +38,23 @@
     <section>
       <h2>Stats</h2>
       <div class="stats">
-        <span>Collisions per second</span>
+        <span>Collisions per second (c/s)</span>
         <span id="stat-cps"></span>
-        <span>Collisisons</span>
+        <span>Collisisons (c)</span>
         <span id="stat-collisions"></span>
-        <span>Block 1 time (total ms)</span>
+        <span>Block 1 time total (s)</span>
         <span id="stat-block1"></span>
-        <span>Block 2 time (total ms)</span>
+        <span>Block 2 time total (s)</span>
         <span id="stat-block2"></span>
 
-        <span>Time</span>
+        <span>Time (s)</span>
         <span id="stat-time"></span>
 
         <span>Frames per second</span>
         <span id="stat-fps"></span>
+        <span>Average collision time (s)</span>
+        <span id="stat-avg"></span>
       </div>
-      
     </section>
     <section>
       <canvas id="canvas" width="256", height="256"></canvas>
@@ -72,7 +73,7 @@ canvas {
 }
 .stats {
   display: grid;
-  grid-template-columns: 200px 200px;
+  grid-template-columns: 250px 100px;
   border: 1px solid white;
   max-width: fit-content;
   padding: 10px;
