@@ -134,3 +134,14 @@ function newCollision(a, b, contentA, contentB, hash) {
   item.appendChild(div);
   document.getElementById('blocks').appendChild(item)
 }
+
+function updateStats(stats) {
+  for(let key of Object.keys(stats)) {
+    const id = `stat-${key}`;
+    const element = document.getElementById(id);
+    const value = stats[key];
+    if(element && element.innerText !== value) {
+      element.innerText = value;
+    }
+  }
+}

@@ -215,8 +215,9 @@ class Renderer {
     this.firstBlocks = [];
     this.fullCollisions = 0;
     this.pixelValues = new Uint8Array(256 * 256 * 4);
-    this.start = Date.now();
-    this.last = Date.now() + 1;
+    this.startTime = Date.now();
+    this.pausedSince = Date.now();
+    this.last = Date.now();
     this.frames = 0;
     this.next = this.generator.getnext(100000);
     this.NUM_BITS_Q16 = 14;
@@ -410,7 +411,7 @@ class Renderer {
       this.firstBlocks.pop();
     }
     if (this.last != oldLast) {
-      const seconds = (this.last - this.start) / 1000;
+      const seconds = (Date.now() - this.startTime) / 1000;
       console.log(
         "collisions:",
         this.fullCollisions,
@@ -422,6 +423,13 @@ class Renderer {
         this.frames / seconds,
         "blocktime", this.blockTime,
       );
+      updateStats({
+        cps: (this.fullCollisions / seconds).toFixed(2),
+        fps: (this.frames / seconds).toFixed(2),
+        collisions: this.fullCollisions,
+        time: seconds.toFixed(1),
+        ...this.blockTime,
+      })
     }
   }
 
@@ -460,17 +468,33 @@ class Renderer {
     // }, 200);
     this.animationFrame = requestAnimationFrame(this.frame.bind(this));
   }
+
+
+  pause() {
+    cancelAnimationFrame(renderer.animationFrame);
+    this.animationFrame = undefined;
+    this.pausedSince = Date.now();
+  }
+
+  paused() {
+    return !this.animationFrame;
+  }
+  start() {
+    const diff = (Date.now() - this.pausedSince)
+    this.startTime += diff;
+    this.last += diff;
+    renderer.frame();
+  }
 }
 const renderer = new Renderer();
 
 document.getElementById("gpu").addEventListener("click", function () {
-  if(renderer.animationFrame) {
-    cancelAnimationFrame(renderer.animationFrame);
-    renderer.animationFrame = undefined;
+  if(!renderer.paused()) {
     document.getElementById("gpu").innerText = "GPU";
+    renderer.pause();
   } else {
     document.getElementById("gpu").innerText = "STOP";
-    renderer.frame();
+    renderer.start();
   }
 })
 

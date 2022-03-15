@@ -36,6 +36,26 @@
       <p id="files-content"></p>
     </section>
     <section>
+      <h2>Stats</h2>
+      <div class="stats">
+        <span>Collisions per second</span>
+        <span id="stat-cps"></span>
+        <span>Collisisons</span>
+        <span id="stat-collisions"></span>
+        <span>Block 1 time (total ms)</span>
+        <span id="stat-block1"></span>
+        <span>Block 2 time (total ms)</span>
+        <span id="stat-block2"></span>
+
+        <span>Time</span>
+        <span id="stat-time"></span>
+
+        <span>Frames per second</span>
+        <span id="stat-fps"></span>
+      </div>
+      
+    </section>
+    <section>
       <canvas id="canvas" width="256", height="256"></canvas>
     </section>
     <ol id="blocks">
@@ -50,11 +70,23 @@ body {
 canvas {
   border: 1px solid white;
 }
+.stats {
+  display: grid;
+  grid-template-columns: 200px 200px;
+  border: 1px solid white;
+  max-width: fit-content;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.stats > span:nth-child(even) {
+  text-align: right;
+}
 .active:before {
   content: "> ";
 }
  .active {
-   font-size: 200%;
+   /*font-size: 200%;*/
  }
  a {
    padding: 5px 20px;
@@ -72,6 +104,7 @@ canvas {
  }
  .block > div {
    flex: 1;
+   word-break: break-all;
    overflow-wrap: break-word;
  }
  canvas {
