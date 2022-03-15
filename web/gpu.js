@@ -220,9 +220,13 @@ class Renderer {
     this.last = Date.now();
     this.frames = 0;
     this.next = this.generator.getnext(100000);
-    this.NUM_BITS_Q16 = 14;
+    this.NUM_BITS_Q16 = 13;
     this.counter = 0;
     this.blockTime = {
+      "block1": 0,
+      "block2": 0,
+    };
+    this.blockCount = {
       "block1": 0,
       "block2": 0,
     };
@@ -418,6 +422,10 @@ class Renderer {
         time: seconds.toFixed(1),
         block1: (this.blockTime.block1 / 1000).toFixed(1),
         block2: (this.blockTime.block2 / 1000).toFixed(1),
+        block1count: (this.blockCount.block1),
+        block2count: (this.blockCount.block2),
+        block1fps: (this.blockCount.block1 / (this.blockTime.block1/1000)).toFixed(1),
+        block2fps: (this.blockCount.block2 / (this.blockTime.block2/1000)).toFixed(1),
         avg: (seconds / this.fullCollisions).toFixed(1),
       })
     }
@@ -429,7 +437,6 @@ class Renderer {
       console.log("gl error", error);
       return;
     }
-    // console.log("this.frame block:", this.block);
     const start = Date.now();
     if (this.next) {
       this.setupScene();
@@ -453,9 +460,7 @@ class Renderer {
     }
     const took = Date.now() - start;
     this.blockTime["block"+this.block] += took;
-    // setTimeout(() => {
-    //   requestAnimationFrame(this.frame.bind(this));
-    // }, 200);
+    this.blockCount["block"+this.block] += 1;
     this.animationFrame = requestAnimationFrame(this.frame.bind(this));
   }
 

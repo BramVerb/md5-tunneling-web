@@ -42,18 +42,31 @@
         <span id="stat-cps"></span>
         <span>Collisisons (c)</span>
         <span id="stat-collisions"></span>
-        <span>Block 1 time total (s)</span>
-        <span id="stat-block1"></span>
-        <span>Block 2 time total (s)</span>
-        <span id="stat-block2"></span>
 
         <span>Time (s)</span>
         <span id="stat-time"></span>
 
         <span>Frames per second</span>
         <span id="stat-fps"></span>
+
         <span>Average collision time (s)</span>
         <span id="stat-avg"></span>
+
+        <span class="margin">Block 1 time total (s)</span>
+        <span class="margin" id="stat-block1"></span>
+        <span>Block 2 time total (s)</span>
+        <span id="stat-block2"></span>
+
+        <span>Block 1 frame count</span>
+        <span id="stat-block1count"></span>
+        <span>Block 2 frame count</span>
+        <span id="stat-block2count"></span>
+
+        <span>Block 1 fps</span>
+        <span id="stat-block1fps"></span>
+        <span>Block 2 fps</span>
+        <span id="stat-block2fps"></span>
+
       </div>
     </section>
     <section>
@@ -78,6 +91,10 @@ canvas {
   max-width: fit-content;
   padding: 10px;
   box-sizing: border-box;
+}
+
+.stats > .margin {
+  margin-top: 10px;
 }
 
 .stats > span:nth-child(even) {
