@@ -135,7 +135,7 @@ function drawScene(gl, programInfo, buffers) {
 function frame() {}
 
 class Renderer {
-  constructor() {
+  constructor(seed) {
     const canvas = document.getElementById("canvas");
     this.gl = canvas.getContext("webgl2");
     this.gl.imageSmoothingEnabled = false;
@@ -211,7 +211,7 @@ class Renderer {
       // },
     };
     this.quad = initBuffers(this.gl);
-    this.generator = new Block1CandidatesGenerator(4);
+    this.generator = new Block1CandidatesGenerator(seed);
     this.block2generator = new Block2Generator();
     this.firstBlocks = [];
     this.fullCollisions = 0;
@@ -492,11 +492,18 @@ class Renderer {
     renderer.frame();
   }
 }
-const renderer = new Renderer();
+let renderer;
 
 document.getElementById("gpu").addEventListener("click", function () {
-  if(!renderer.paused()) {
-    document.getElementById("gpu").innerText = "GPU";
+  if(!renderer) {
+    const seedElement = document.getElementById("seed");
+    seed = parseInt(seedElement.value, 16);
+    seedElement.setAttribute("disabled", true);
+    console.log(seed>>>0);
+    renderer = new Renderer(seed);
+  }
+  if(renderer && !renderer.paused()) {
+    document.getElementById("gpu").innerText = "Continue";
     renderer.pause();
   } else {
     document.getElementById("gpu").innerText = "STOP";

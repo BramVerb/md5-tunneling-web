@@ -13,84 +13,11 @@ function createFileDownload(content, text, filename) {
   return a1;
 }
 
-function step1() {
-  console.time("Block1");
-  if (Block1() == -1) {
-    printf("\nCollision not found!\n");
-    return -1;
-  }
-  console.timeEnd("Block1");
-  document.getElementById("block1").classList.remove("active");
-  document.getElementById("block1").innerHTML += " - DONE";
-  document.getElementById("block2").classList.add("active");
-  setTimeout(step2, 100);
-}
-
 function setSelectedBlock(block) {
   const activeBlock = block == 1? "block1" : "block2";
   const inactiveBlock = block == 1? "block2" : "block1";
   document.getElementById(inactiveBlock).classList.remove("active");
   document.getElementById(activeBlock).classList.add("active");
-  const now = Date.now();
-  lastTime = now;
-}
-
-function step2() {
-  console.time("Block2");
-  if (Block2() == -1) {
-    printf("\nCollision not found!\n");
-    return -1;
-  }
-  console.timeEnd("Block2");
-  setTimeout(stepHash, 100);
-}
-
-function stepHash() {
-  document.getElementById("block2").classList.remove("active");
-  document.getElementById("block2").innerHTML += " - DONE";
-  document.getElementById("hash").classList.add("active");
-  let obj = createMD5Object();
-  obj.Hx[0] = 0x00000080;
-  obj.Hx[14] = 0x00000400;
-  obj.a = A0;
-  obj.b = B0;
-  obj.c = C0;
-  obj.d = D0;
-  obj = HMD5Tr(obj);
-  A0 += obj.a;
-  B0 += obj.b;
-  C0 += obj.c;
-  D0 += obj.d;
-  const hash = toHex(A0)+toHex(B0)+toHex(C0)+toHex(D0);
-  console.log("Collision hash:", hash);
-  document.getElementById("hash-content").innerHTML = hash;
-  setTimeout(end, 100);
-}
-
-function end() {
-  document.getElementById("hash").classList.remove("active");
-  document.getElementById("hash").innerHTML += " - DONE";
-  document.getElementById("files").classList.add("active");
-  const a1 = createFileDownload(v1, "File 1", "file1.txt");
-  const a2 = createFileDownload(v2, "File 2", "file2.txt");
-  document.getElementById("files-content").appendChild(a1);
-  document.getElementById("files-content").appendChild(a2);
-  document.getElementById("start").removeAttribute("disabled");
-  document.getElementById("files").innerHTML += " - DONE";
-}
-
-function start() {
-  document.getElementById("inputs").classList.remove("active");
-  document.getElementById("block1").classList.add("active");
-  document.getElementById("start").setAttribute('disabled', true);
-  setTimeout(step1, 100);
-
-
-
-    // Last message block computation (Padding)
-
-
-  // Hash computation
 }
 
 function toHex(x) {
@@ -101,16 +28,6 @@ function toHex(x) {
   s += ((x >>> 24) & 0xff).toString(16).padStart(2, "0");
   return s;
 }
-
-document.getElementById("start").addEventListener("click", function () {
-  seed = parseInt(document.getElementById("seed").value, 16);
-  X = seed >>> 0;
-  console.log("seed", seed >>> 0);
-  console.time("full");
-  start();
-  console.timeEnd("full");
-});
-X = 3770369038;
 
 function newCollision(a, b, contentA, contentB, hash) {
   const item = document.createElement('li');

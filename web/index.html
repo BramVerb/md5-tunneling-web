@@ -21,19 +21,12 @@
              >Seed (in hex)
              <input id="seed" type="text" value="4" />
       </label>
-        <button id="start">Start</button>
-        <button id="gpu">GPU</button>
+        <button id="gpu">Start</button>
     </section>
     <section>
       <h2>Output</h2>
       <h3 id="block1">Block 1</h3>
-      <p id="block1-content"></p>
       <h3 id="block2">Block 2</h3>
-      <p id="block2-content"> </p>
-      <h3 id="hash">Hash</h3>
-      <p id="hash-content"></p>
-      <h3 id="files">Files</h3>
-      <p id="files-content"></p>
     </section>
     <section>
       <h2>Stats</h2>
@@ -72,17 +65,17 @@
     <section>
       <canvas id="canvas" width="256", height="256"></canvas>
     </section>
-    <ol id="blocks">
-    </ol>
+    <section>
+      <h2>Collisisons</h2>
+      <ol id="blocks">
+      </ol>
+    </section>
     <div id="bottom"></div>
 <style>
 body {
   font-family: monospace;
   background-color: black;
   color: white;
-}
-canvas {
-  border: 1px solid white;
 }
 .stats {
   display: grid;
@@ -130,11 +123,25 @@ canvas {
    overflow-wrap: break-word;
  }
  canvas {
-   transform: scale(2, 2);
-   transform-origin: top left;
+   z-index: -1;
+   top: 10px;
+   right: 20px;
+   border: 1px solid white;
    margin-top: 10px;
-   margin-bottom: 256px;
  }
+
+@media screen and (min-width: 640px) {
+  canvas {
+    position: absolute;
+  }
+}
+
+@media screen and (min-width: 960px) {
+  canvas {
+     transform: scale(2, 2);
+     transform-origin: top right;
+  }
+}
  
 
 </style>

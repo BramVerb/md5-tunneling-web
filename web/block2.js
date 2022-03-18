@@ -174,8 +174,8 @@ class Block2Generator {
     const rng = this.rng.bind(this);
     const Q = this.Q;
     const x = this.x;
-    if (this.doneStep >= Math.pow(2, NUM_BITS_Q16+8)) {
-      console.warn('gone through all of them, should go to next block1');
+    if (this.doneStep >= Math.pow(2, Math.min(25, NUM_BITS_Q16+8))) {
+      console.warn('giving up on the second block');
       return false;
     }
     for (let itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
