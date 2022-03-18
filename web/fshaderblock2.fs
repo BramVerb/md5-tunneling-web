@@ -5,6 +5,8 @@ uniform highp uint D1;
 
 uniform highp uint NUM_BITS_Q16;
 
+uniform highp uint seed2;
+
 u32 create_return_from_second_tunnels() {
   u32 res = 0u;
   res = res + tunnel9;
@@ -50,9 +52,6 @@ int Block2(uint id) {
   // Start block 2 generation.
   // TO-DO: add a time limit for collision search.
   /* for (int it = 0; it <= 0; it++) { */
-  for (i = 0u; i < ((id >> 14u) & 3u); i++){
-    rng();
-  }
 
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
     // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7dfu
@@ -197,6 +196,7 @@ int Block2(uint id) {
     // MMMM Q16 - 25 bits
     /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
     /* for (itr_q16 = 0u; itr_q16 < pow2(25 - 16); itr_q16++) { */
+    X = seed2;
     for (itr_q16 = 0u; itr_q16 < pow2(NUM_BITS_Q16); itr_q16++) {
     /* for (itr_q16 = 0u; itr_q16 < pow2(11); itr_q16++) { */
 
@@ -594,6 +594,9 @@ void main() {
     u32 y = uint(pos.y);
     X = seed;
     u32 id = x + y * 256u;
+    if (id >> 14 != 0u) {
+      discard;
+    }
     int it = Block2(id);
     if (it >= 0) {
       color = return_vec(create_return_from_second_tunnels());

@@ -190,7 +190,7 @@ class Renderer {
         ),
       },
       uniformLocations: this.getUniforms(
-        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1", "NUM_BITS_Q16"],
+        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1", "NUM_BITS_Q16", "seed2"],
         this.gl,
         this.shaderProgram2
       ),
@@ -211,7 +211,8 @@ class Renderer {
       // },
     };
     this.quad = initBuffers(this.gl);
-    this.generator = new Block1CandidatesGenerator(mix(4));
+    this.generator = new Block1CandidatesGenerator(4);
+    this.block2generator = new Block2Generator();
     this.firstBlocks = [];
     this.fullCollisions = 0;
     this.pixelValues = new Uint8Array(256 * 256 * 4);
@@ -246,13 +247,23 @@ class Renderer {
       const programInfo = this.programInfo2;
       this.gl.useProgram(programInfo.program);
       const { x, y, v, seed } = c;
-      this.determineTunnelValues(x, y, v, seed);
-      for(let i = 0; i < 4*this.counter; i++){
-        rng();
+      let seed2 = this.block2seed;
+      if(this.counter == 0){
+        this.determineTunnelValues(x, y, v, seed);
+        this.block2seed = (X >>> 0);
+        seed2 = this.block2seed;
+        this.block2generator.iteration(this.block2seed);
+      } else {
+        if(this.block2generator.step2(this.NUM_BITS_Q16)) {
+          seed2 = this.block2generator.X;
+        } else {
+          this.firstBlocks.pop();
+          return this.setupScene();
+        }
       }
       this.counter++;
-      this.block2seed = (X >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.seed, this.block2seed >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.seed2, seed2 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.B0, B0 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.C0, C0 >>> 0);
@@ -343,17 +354,17 @@ class Renderer {
     const skip_rng = ((id) & 3) >>> 0;
     const input = {
       id,
-      seed,
       startQ4,
       startQ9,
       skip_rng,
+      rng: this.block2generator.X,
     };
     X = this.block2seed >>> 0;
     // console.time("block 2 collision");
     // TODO generate multiple blocks at a time from different collisions
     const block2 = Block2(input);
     if (block2 < 0) {
-      console.error("collision block 2 not found on cpu");
+      console.error("collision block 2 not found on cpu", input);
       return;
     }
     this.fullCollisions += 1;
@@ -413,7 +424,7 @@ class Renderer {
     if(goToNextBlock) {
       this.firstBlocks.pop();
     }
-    if (this.last != oldLast) {
+    if (this.frames % 60 == 0) {
       const seconds = (Date.now() - this.startTime) / 1000;
       updateStats({
         cps: (this.fullCollisions / seconds).toFixed(1),

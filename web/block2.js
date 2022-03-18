@@ -1,6 +1,263 @@
 const USE_B2_Q9 = true;
 
 
+class Block2Generator {
+  constructor() {
+    this.Q = newArray(65);
+    this.x = newArray(16);
+  }
+
+
+  rng() {
+    this.X = ((1664525 * this.X + 1013904223) & 0xffffffff);
+    //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
+
+    return this.X;
+  }
+
+  iteration(X) {
+    this.X = X;
+    this.QM3 = A0;
+    this.QM0 = B0;
+    this.QM1 = C0;
+    this.QM2 = D0;
+    const QM3 = this.QM3;
+    const QM0 = this.QM0;
+    const QM1 = this.QM1;
+    const QM2 = this.QM2;
+    const Q = this.Q;
+    const rng = this.rng.bind(this)
+    const I = QM0 & 0x80000000;
+    const not_I = ~QM0 & 0x80000000;
+    // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
+    // RNG   =  .***  ...*  **.*  ***.  ****  .***  **.*  ****  0x71def7df
+    // 0     =  ....  *.*.  ....  ....  ....  *...  ..*.  ....  0x0a000820
+    // 1     =  ....  .*..  ..*.  ...*  ....  ....  ....  ....  0x04210000
+    Q[1] = (rng() & 0x71def7df) + 0x04210000 + not_I;
+
+    // Multi message modif. meth. (MMMM) Q1Q2, Klima
+    // Q[ 2] = ~I^^^  110^  ^^0^  ^^^1  0^^^  1^^^  ^^0v  v00^
+    // RNG   =  ....  ....  ....  ....  ....  ....  ...*  *...  0x00000018
+    // 0     =  ....  ..*.  ..*.  ....  *...  ....  ..*.  .**.  0x02208026
+    // 1     =  ....  **..  ....  ...*  ....  *...  ....  ....  0x0c010800
+    // Q[ 1] =  .***  ...*  **.*  ***.  .***  .***  **..  ...*  0x71de77c1
+    Q[2] = (rng() & 0x00000018) + 0x0c010800 + (Q[1] & 0x71de77c1) + not_I;
+
+    // Q[ 3] = ~I011  111.  ..01  1111  1..0  1vv1  011^  ^111
+    // RNG   =  ....  ...*  **..  ....  .**.  .**.  ....  ....  0x01c06600
+    // 0     =  .*..  ....  ..*.  ....  ...*  ....  *...  ....  0x40201080
+    // 1     =  ..**  ***.  ...*  ****  *...  *..*  .**.  .***  0x3e1f8967
+    // Q[ 2] =  ....  ....  ....  ....  ....  ....  ...*  *...  0x00000018
+    Q[3] = (rng() & 0x01c06600) + 0x3e1f8967 + (Q[2] & 0x00000018) + not_I;
+
+    // Q[ 4] = ~I011  101.  ..00  0100  ...0  0^^0  0001  0001
+    // RNG   =  ....  ...*  **..  ....  ***.  ....  ....  ....  0x01c0e000
+    // 0     =  .*..  .*..  ..**  *.**  ...*  *..*  ***.  ***.  0x443b19ee
+    // 1     =  ..**  *.*.  ....  .*..  ....  ....  ...*  ...*  0x3a040011
+    // Q[ 3] =  ....  ....  ....  ....  ....  .**.  ....  ....  0x00000600
+    Q[4] = (rng() & 0x01c0e000) + 0x3a040011 + (Q[3] & 0x00000600) + not_I;
+
+    // Q4 tunnel, Klima, bits 25-23,16-14
+    // Q[ 5] =  I100  10.0  0010  1111  0000  1110  0101  0000
+    // RNG   =  ....  ..*.  ....  ....  ....  ....  ....  ....  0x02000000
+    // 0     =  ..**  .*.*  **.*  ....  ****  ...*  *.*.  ****  0x35d0f1af
+    // 1     =  .*..  *...  ..*.  ****  ....  ***.  .*.*  ....  0x482f0e50
+    Q[5] = (rng() & 0x02000000) + 0x482f0e50 + I;
+
+    // Q4 tunnel, Klima, bits 25-23,16-14
+    // Q[ 6] =  I..0  0101  1110  ..10  1110  1100  0101  0110
+    // RNG   =  .**.  ....  ....  **..  ....  ....  ....  ....  0x600c0000
+    // 0     =  ...*  *.*.  ...*  ...*  ...*  ..**  *.*.  *..*  0x1a1113a9
+    // 1     =  ....  .*.*  ***.  ..*.  ***.  **..  .*.*  .**.  0x05e2ec56
+    Q[6] = (rng() & 0x600c0000) + 0x05e2ec56 + I;
+
+    // Q[ 7] = ~I..1  0111  1.00  ..01  10.1  1110  00..  ..v1
+    // RNG   =  .**.  ....  .*..  **..  ..*.  ....  ..**  ***.  0x604c203e
+    // 0     =  ....  *...  ..**  ..*.  .*..  ...*  **..  ....  0x083241c0
+    // 1     =  ...*  .***  *...  ...*  *..*  ***.  ....  ...*  0x17819e01
+    Q[7] = (rng() & 0x604c203e) + 0x17819e01 + not_I;
+
+    // Q[ 8] = ~I..0  0100  0.11  ..10  1..v  ..11  111.  ..^0
+    // RNG   =  .**.  ....  .*..  **..  .***  **..  ...*  **..  0x604c7c1c
+    // 0     =  ...*  *.**  *...  ...*  ....  ....  ....  ...*  0x1b810001
+    // 1     =  ....  .*..  ..**  ..*.  *...  ..**  ***.  ....  0x043283e0
+    // Q[ 7] =  ....  ....  ....  ....  ....  ....  ....  ..*.  0x00000002
+    Q[8] = (rng() & 0x604c7c1c) + 0x043283e0 + (Q[7] & 0x00000002) + not_I;
+
+    // Q9 tunnel plus MMMM-Q12Q11, Klima, prepared, not programmed
+    // Q[ 9] = ~Ivv1  1100  0xxx  .x01  0..^  .x01  110x  xx01
+    // RNG   =  .**.  ....  .***  **..  .**.  **..  ...*  **..  0x607c6c1c
+    // 0     =  ....  ..**  *...  ..*.  *...  ..*.  ..*.  ..*.  0x03828222
+    // 1     =  ...*  **..  ....  ...*  ....  ...*  **..  ...*  0x1c0101c1
+    // Q[ 8] =  ....  ....  ....  ....  ...*  ....  ....  ....  0x00001000
+    Q[9] = (rng() & 0x607c6c1c) + 0x1c0101c1 + (Q[8] & 0x00001000) + not_I;
+
+    // Q9 tunnel plus MMMM-Q12Q11, Klima
+    // Q[10] = ~I^^1  1111  1000  v011  1vv0  1011  1100  0000
+    // RNG   =  ....  ....  ....  *...  .**.  ....  ....  ....  0x00086000
+    // 0     =  ....  ....  .***  .*..  ...*  .*..  ..**  ****  0x0074143f
+    // 1     =  ...*  ****  *...  ..**  *...  *.**  **..  ....  0x1f838bc0
+    // Q[ 9] =  .**.  ....  ....  ....  ....  ....  ....  ....  0x60000000
+    Q[10] = (rng() & 0x00086000) + 0x1f838bc0 + (Q[9] & 0x60000000) + not_I;
+
+    // Q9 tunnel plus MMMM-Q12Q11, Klima
+    // Q[11] = ~Ivvv  vvvv  .111  ^101  1^^0  0111  11v1  1111
+    // RNG   =  .***  ****  *...  ....  ....  ....  ..*.  ....  0x7f800020
+    // 0     =  ....  ....  ....  ..*.  ...*  *...  ....  ....  0x00021800
+    // 1     =  ....  ....  .***  .*.*  *...  .***  **.*  ****  0x007587df
+    // Q[10] =  ....  ....  ....  *...  .**.  ....  ....  ....  0x00086000
+    Q[11] = (rng() & 0x7f800020) + 0x007587df + (Q[10] & 0x00086000) + not_I;
+
+    // MMMM-Q12Q11, Klima
+    // Q[12] = ~I^^^  ^^^^  ....  1000  0001  ....  1.^.  ....
+    // RNG   =  ....  ....  ****  ....  ....  ****  .*.*  ****  0x00f00f5f
+    // 0     =  ....  ....  ....  .***  ***.  ....  ....  ....  0x0007e000
+    // 1     =  ....  ....  ....  *...  ...*  ....  *...  ....  0x00081080
+    // Q[11] =  .***  ****  ....  ....  ....  ....  ..*.  ....  0x7f000020
+    Q[12] = (rng() & 0x00f00f5f) + 0x00081080 + (Q[11] & 0x7f000020) + not_I;
+
+    // Q[13] =  I011  1111  0...  1111  111.  ....  0...  1...
+    // RNG   =  ....  ....  .***  ....  ...*  ****  .***  .***  0x00701f77
+    // 0     =  .*..  ....  *...  ....  ....  ....  *...  ....  0x40800080
+    // 1     =  ..**  ****  ....  ****  ***.  ....  ....  *...  0x3f0fe008
+    Q[13] = (rng() & 0x00701f77) + 0x3f0fe008 + I;
+
+    // Q[14] =  I100  0000  1...  1011  111.  ....  1...  1...
+    // RNG   =  ....  ....  .***  ....  ...*  ****  .***  .***  0x00701f77
+    // 0     =  ..**  ****  ....  .*..  ....  ....  ....  ....  0x3f040000
+    // 1     =  .*..  ....  *...  *.**  ***.  ....  *...  *...  0x408be088
+    Q[14] = (rng() & 0x00701f77) + 0x408be088 + I;
+
+    // Next sufficient conditions until Q[24]:
+    // Q[15] =  0111  1101  ....  ..10  00..  ....  ....  0...
+    // Q[16] =  ^.10  ....  ....  ..01  1...  ....  ....  1...
+    // Q[17] =  ^.v.  ....  ....  ..0.  1...  ....  ....  1...
+    // Q[18] =  ^.^.  ....  ....  ..1.  ....  ....  ....  ....
+    // Q[19] =  ^...  ....  ....  ..0.  ....  ....  ....  ....
+    // Q[20] =  ^...  ....  ....  ..v.  ....  ....  ....  ....
+    // Q[21] =  ^...  ....  ....  ..^.  ....  ....  ....  ....
+    // Q[22] =  ^...  ....  ....  ....  ....  ....  ....  ....
+    // Q[23] =  0...  ....  ....  ....  ....  ....  ....  ....
+    // Q[24] =  1...  ....  ....  ....  ....  ....  ....  ....
+
+    // In MMMM-Q[1]/Q[2] we want to change the value of x[0] without updating
+    // the value of x[1], as updating x[1] will cause conditions on Q[17] not
+    // hold. According to F, if QM0[i] = QM1[i] randomly choose the value where
+    // Q[1][i] = Q[2][i] will not change the value of F(Q[1],QM0,QM1). We select
+    // these bits
+    //  Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
+    //  Q[ 2] = ~I^^^  110^  ^^0^  ^^^1  0^^^  1^^^  ^^0v  v00^
+    //           0111  0001  1101  1110  0111  0111  1100  0001 = 0x71de77c1
+    //
+    // Note that (~(QM0 ^ QM1)) are all the bits where QM0[i] = QM1[i] and so
+    // mask_Q1Q2 are all the bits where QM0[i] = QM1[i] and where Q[1][i] =
+    // Q[2][i]. These bits will be changed.
+    this.mask_Q1Q2 = ~(QM0 ^ QM1) & 0x71de77c1;
+    this.Q1Q2_strength = 0;
+    for (let i = 1; i < 33; i++) this.Q1Q2_strength += bit(this.mask_Q1Q2, i);
+
+    this.Q1_fix = Q[1] & ~this.mask_Q1Q2;
+    this.Q2_fix = Q[2] & ~this.mask_Q1Q2;
+
+    this.tmp_q1 = Q[1];
+    this.tmp_q2 = Q[2];
+    this.tmp_q4 = Q[4];
+    this.tmp_q9 = Q[9];
+    this.doneStep = 0;
+  }
+
+  step2(NUM_BITS_Q16) {
+    const QM3 = this.QM3;
+    const QM0 = this.QM0;
+    const QM1 = this.QM1;
+    const QM2 = this.QM2;
+    const rng = this.rng.bind(this);
+    const Q = this.Q;
+    const x = this.x;
+    if (this.doneStep >= Math.pow(2, NUM_BITS_Q16+8)) {
+      console.warn('gone through all of them, should go to next block1');
+      return false;
+    }
+    for (let itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
+      this.doneStep += 1;
+      Q[1] = this.tmp_q1;
+      Q[2] = this.tmp_q2;
+      Q[4] = this.tmp_q4;
+      Q[9] = this.tmp_q9;
+
+      // Conditions by Liang-Lai says: Q[15] = (rng() & 0x80fc3ff7) +
+      // 0x7d020000, Q[15] =  0111  1101  ....  ..10  00..  ....  ....  0... RNG
+      // =  ....  ....  ****  **..  ..**  ****  ****  .***  0x80fc3ff7 0     =
+      // *...  ..*.  ....  ...*  **..  ....  ....  *...  0x0201c008 1     = .***
+      // **.*  ....  ..*.  ....  ....  ....  ....  0x7d020000
+      Q[15] = (rng() & 0x00fc3ff7) + 0x7d020000;
+
+      // Q[16] =  ^.10  ....  ....  ..01  1...  ....  ....  1...
+      // RNG   =  .*..  ****  ****  **..  .***  ****  ****  .***  0x4ffc7ff7
+      // 0     =  ...*  ....  ....  ..*.  ....  ....  ....  ....  0x10020000
+      // 1     =  ..*.  ....  ....  ...*  *...  ....  ....  *...  0x20018008
+      // Q[15] =  *.... ..... ..... .... ..... ..... ...... ....  0x80000000
+      Q[16] = (rng() & 0x4ffc7ff7) + 0x20018008 + (Q[15] & 0x80000000);
+
+      x[1] = RR(Q[2] - Q[1], 12) - F(Q[1], QM0, QM1) - QM2 - 0xe8c7b756;
+      x[6] = RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613;
+      x[11] = RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be;
+
+      // Q[17] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      // Extra conditions: Σ17,25 ~ Σ17,27 not all 1
+      // 0x07000000 =  0000 0111 0000 0000 0000 0000 0000 0000
+      const sigma_Q17 = G(Q[16], Q[15], Q[14]) + Q[13] + x[1] + 0xf61e2562;
+      if ((sigma_Q17 & 0x07000000) == 0x07000000) continue;
+
+      // Q[16] =  ^.10  ....  ....  ..01  1...  ....  ....  1...
+      // Q[17] =  ^.v.  ....  ....  ..0.  1...  ....  ....  1...
+      //          1000  0000  0000  0010  1000  0000  0000  1000 0x80028008
+      Q[17] = Q[16] + RL(sigma_Q17, 5);
+
+      if ((Q[17] & 0x80028008) != (Q[16] & 0x80028008)) continue;
+
+      // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Q[18] = Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9);
+
+      // Q[18] =  ^.^.  ....  ....  ..1.  ....  ....  ....  ....
+      if (bit(Q[18], 18) != 1) continue;
+
+      if ((Q[18] & 0xa0000000) != (Q[17] & 0xa0000000)) continue;
+
+      // Q[19] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      // Extra conditions: Σ19,4 ~ Σ19,18 not all 1
+      // 0x0003fff8 =  0000 0000 0000 0011 1111 1111 1111 1000
+      const sigma_Q19 = G(Q[18], Q[17], Q[16]) + Q[15] + x[11] + 0x265e5a51;
+      if ((sigma_Q19 & 0x0003fff8) == 0x0003fff8) continue;
+
+      Q[19] = Q[18] + RL(sigma_Q19, 14);
+
+      // Q[19] =  ^...  ....  ....  ..0.  ....  ....  ....  ....
+      if (bit(Q[19], 18) != 0) continue;
+
+      if (bit(Q[19], 32) != bit(Q[18], 32)) continue;
+
+      x[10] = RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1;
+      x[15] =
+        RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821;
+
+      ///////////////////////////////////////////////////////////////
+      ///                      MMMM Q1/Q2                          //
+      ///////////////////////////////////////////////////////////////
+      // MMMM Q1/Q2 - variable bits
+      for (let itr_q1q2 = 0; itr_q1q2 < Math.pow(2, this.Q1Q2_strength); itr_q1q2++) {
+        Q[4] = this.tmp_q4;
+        Q[9] = this.tmp_q9;
+
+        // We randomly change the mask bits where QM0[i] = QM1[i] and where
+        // Q[1][i] = Q[2][i]
+        Q[1] = (rng() & this.mask_Q1Q2) + this.Q1_fix;
+      }
+    }
+    return true;
+  }
+}
+
 function Block2(input) {
   let Q = newArray(65);
   let x = newArray(16);
@@ -19,24 +276,10 @@ function Block2(input) {
     tmp_q9 = 0;
   let I = 0,
     not_I = 0;
-  let sigma_Q17 = 0,
-    sigma_Q19 = 0,
-    sigma_Q20 = 0,
-    sigma_Q23 = 0,
-    sigma_Q35 = 0,
-    sigma_Q62 = 0;
   let Q1_fix = 0,
     Q2_fix = 0,
     mask_Q1Q2 = 0,
     Q1Q2_strength = 0;
-  let AA0 = 0,
-    BB0 = 0,
-    CC0 = 0,
-    DD0 = 0,
-    AA1 = 0,
-    BB1 = 0,
-    CC1 = 0,
-    DD1 = 0;
 
   QM3 = A0;
   QM0 = B0;
@@ -54,7 +297,7 @@ function Block2(input) {
   const mask_Q4 = generate_mask(Q4_strength, Q4_mask_bits);
 
   const itr_q4_start = (input && input.startQ4) || 0;
-  const itr_q4_end = (input && input.startQ4 + 1) || Math.pow(2, 6);
+  const itr_q4_end = (input && input.startQ4 + 1) || Math.pow(2, Q4_strength);
 
   const itr_q9_start = (input && input.startQ9) || 0;
   const itr_q9_end =
@@ -63,12 +306,6 @@ function Block2(input) {
   // We extract the 32th bit of B0 and its
   I = QM0 & 0x80000000;
   not_I = ~QM0 & 0x80000000;
-
-  if(input && input.skip_rng) {
-    for (let i = 0; i < input.skip_rng; i++){
-      rng();
-    }
-  }
 
   const NUM_BITS_Q16 = input.NUM_BITS_Q16 || 16;
 
@@ -215,6 +452,10 @@ function Block2(input) {
     ///                        MMMM Q16                          //
     ///////////////////////////////////////////////////////////////
     // MMMM Q16 - 25 bits
+    if(input && input.rng) {
+      X = input.rng;
+    }
+
     for (itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
       Q[1] = tmp_q1;
       Q[2] = tmp_q2;
@@ -242,7 +483,7 @@ function Block2(input) {
       // Q[17] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // Extra conditions: Σ17,25 ~ Σ17,27 not all 1
       // 0x07000000 =  0000 0111 0000 0000 0000 0000 0000 0000
-      sigma_Q17 = G(Q[16], Q[15], Q[14]) + Q[13] + x[1] + 0xf61e2562;
+      const sigma_Q17 = G(Q[16], Q[15], Q[14]) + Q[13] + x[1] + 0xf61e2562;
       if ((sigma_Q17 & 0x07000000) == 0x07000000) continue;
 
       // Q[16] =  ^.10  ....  ....  ..01  1...  ....  ....  1...
@@ -263,7 +504,7 @@ function Block2(input) {
       // Q[19] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       // Extra conditions: Σ19,4 ~ Σ19,18 not all 1
       // 0x0003fff8 =  0000 0000 0000 0011 1111 1111 1111 1000
-      sigma_Q19 = G(Q[18], Q[17], Q[16]) + Q[15] + x[11] + 0x265e5a51;
+      const sigma_Q19 = G(Q[18], Q[17], Q[16]) + Q[15] + x[11] + 0x265e5a51;
       if ((sigma_Q19 & 0x0003fff8) == 0x0003fff8) continue;
 
       Q[19] = Q[18] + RL(sigma_Q19, 14);
@@ -295,7 +536,7 @@ function Block2(input) {
         // Q[20] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ20,30 ~ Σ20,32 not all 0
         // 0xe0000000 =  1110 0000 0000 0000 0000 0000 0000 0000
-        sigma_Q20 = G(Q[19], Q[18], Q[17]) + Q[16] + x[0] + 0xe9b6c7aa;
+        const sigma_Q20 = G(Q[19], Q[18], Q[17]) + Q[16] + x[0] + 0xe9b6c7aa;
         if ((sigma_Q20 & 0xe0000000) == 0) continue;
 
         Q[20] = Q[19] + RL(sigma_Q20, 20);
@@ -322,7 +563,7 @@ function Block2(input) {
 
         // Q[23] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ23,18 = 0
-        sigma_Q23 = G(Q[22], Q[21], Q[20]) + Q[19] + x[15] + 0xd8a1e681;
+        const sigma_Q23 = G(Q[22], Q[21], Q[20]) + Q[19] + x[15] + 0xd8a1e681;
         if (bit(sigma_Q23, 18) != 0) continue;
 
         Q[23] = Q[22] + RL(sigma_Q23, 14);
@@ -409,7 +650,7 @@ function Block2(input) {
               RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[8] + 0x8771f681, 11);
 
             // Extra conditions: Σ35,16 = 1
-            sigma_Q35 = H(Q[34], Q[33], Q[32]) + Q[31] + x[11] + 0x6d9d6122;
+            const sigma_Q35 = H(Q[34], Q[33], Q[32]) + Q[31] + x[11] + 0x6d9d6122;
             if (bit(sigma_Q35, 16) != 1) continue;
 
             Q[35] = Q[34] + RL(sigma_Q35, 16);
@@ -539,7 +780,7 @@ function Block2(input) {
 
             // Extra conditions: Σ62,16 ~ Σ62,22 not all 0
             // 0x003f8000 =  0000 0000 0011 1111 1000 0000 0000 0000
-            sigma_Q62 = fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
+            const sigma_Q62 = fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
             if ((sigma_Q62 & 0x003f8000) == 0) continue;
 
             Q[62] = Q[61] + RL(sigma_Q62, 10);
@@ -567,10 +808,10 @@ function Block2(input) {
             // reached.
 
             // Message 1 intermediate hash
-            AA0 = A0 + Q[61];
-            BB0 = B0 + Q[64];
-            CC0 = C0 + Q[63];
-            DD0 = D0 + Q[62];
+            const AA0 = A0 + Q[61];
+            const BB0 = B0 + Q[64];
+            const CC0 = C0 + Q[63];
+            const DD0 = D0 + Q[62];
 
             let obj = createMD5Object();
             let { Hx } = obj;
@@ -588,10 +829,10 @@ function Block2(input) {
 
             obj = HMD5Tr(obj);
 
-            AA1 = (A1 + obj.a) >>> 0;
-            BB1 = (B1 + obj.b) >>> 0;
-            CC1 = (C1 + obj.c) >>> 0;
-            DD1 = (D1 + obj.d) >>> 0;
+            const AA1 = (A1 + obj.a) >>> 0;
+            const BB1 = (B1 + obj.b) >>> 0;
+            const CC1 = (C1 + obj.c) >>> 0;
+            const DD1 = (D1 + obj.d) >>> 0;
 
             if (
               (AA1 - AA0) >>> 0 != 0 ||
