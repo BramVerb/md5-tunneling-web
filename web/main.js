@@ -62,3 +62,12 @@ function updateStats(stats) {
     }
   }
 }
+
+document.getElementById("showcontent").addEventListener('change', function (e) {
+  console.log(e.target.checked);
+  if(e.target.checked) {
+    document.getElementById("blocks").classList.add("show")
+  } else {
+    document.getElementById("blocks").classList.remove("show")
+  }
+});
