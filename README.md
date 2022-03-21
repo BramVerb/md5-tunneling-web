@@ -1,5 +1,10 @@
 # md5-tunneling
-A C implementation of the Tunneling Method by V. Klima to speed up collision search for MD5.
+A web version of the C implementation of the Tunneling Method by V. Klima to speed up collision search for MD5.
+
+It uses webgl to apply tunnels in parralel and find collisions faster than the original implementation.
+Results do very depending on GPU setup. I was able to generate a collisions in an average of 1.6s on a notebook GPU (Quadro M1200).
+The C version on the same laptop took on average about 11 seconds per collision.
+NOTE: You might experience some dropped frames, because it does use your GPU.
 
 ## About
 Based on Multi-Message Modifications Method and Tunnels, the program searches for two 128-bytes messages with same [MD5](https://en.wikipedia.org/wiki/MD5) hash.
@@ -8,14 +13,19 @@ The idea of Tunnels to speed up MD5 collisions search is described in: *Vlastimi
 
 Other related papers and attack examples can be found [here](http://cryptography.hyperlink.cz/MD5_collisions.html).
 
-## Compilation
-The Math library needs to be linked
+## Usage
+Start a webserver in the `web/` folder.
+Go to that url.
+For example using python3's `http.server`
 
 ```
-gcc tunneling.c -lm -o md5-tunneling
+cd web/
+python3 -m http.server
 ```
 
-## Functionalities
+You can now go to: `localhost:8000`
+
+## Original Functionalities (have not been ported to this web implementation)
 At compile time, the user can choose to
 * Enable/disable any implemented tunnel
 * Write to disk the two colliding messages as binaries
