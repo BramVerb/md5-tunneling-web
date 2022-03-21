@@ -673,7 +673,7 @@ class Block2Generator {
               RL(fI(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
 
             // Condition not necessary (Sasaki), try to remove
-            if (bit(Q[64], 26) != 1) continue;
+            // if (bit(Q[64], 26) != 1) continue;
 
             // Block 2 is now completed. We verify if the differential path is
             // reached.

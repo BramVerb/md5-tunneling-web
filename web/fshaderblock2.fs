@@ -510,8 +510,8 @@ int Block2(uint id) {
             Q[64] = Q[63] + RL(I(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391u, 21u);
 
             // Condition not necessary (Sasaki), try to remove
-            if (bit(Q[64], 26u) != 1u)
-              continue;
+            /* if (bit(Q[64], 26u) != 1u) */
+            /*   continue; */
 
             // Block 2 is now completed. We verify if the differential path is
             // reached.
