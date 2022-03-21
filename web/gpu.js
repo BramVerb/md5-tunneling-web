@@ -400,30 +400,32 @@ class Renderer {
       return;
     }
     const start = Date.now();
-    if (this.next) {
-      this.setupScene();
-      if (this.block == 1) {
-        drawScene(this.gl, this.programInfo, this.quad);
-      } else {
-        drawScene(this.gl, this.programInfo2, this.quad);
-      }
-      const seed = this.next.seed;
-      this.next = this.generator.getnext(100000);
-      this.gl.readPixels(
-        0,
-        0,
-        256,
-        256,
-        this.gl.RGBA,
-        this.gl.UNSIGNED_BYTE,
-        this.pixelValues
-      );
-      this.readFrame(seed);
+    this.setupScene();
+    if (this.block == 1) {
+      drawScene(this.gl, this.programInfo, this.quad);
+    } else {
+      drawScene(this.gl, this.programInfo2, this.quad);
     }
+    const seed = this.next.seed;
+    this.next = this.generator.getnext(100000);
+    this.gl.readPixels(
+      0,
+      0,
+      256,
+      256,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      this.pixelValues
+    );
+    this.readFrame(seed);
     const took = Date.now() - start;
     this.blockTime["block" + this.block] += took;
     this.blockCount["block" + this.block] += 1;
-    this.animationFrame = requestAnimationFrame(this.frame.bind(this));
+    if(this.fullCollisions <= nCollisions) {
+      this.animationFrame = requestAnimationFrame(this.frame.bind(this));
+    } else {
+      console.log("DONE WITH ", this.fullCollisions, "collisions");
+    }
   }
 
   pause() {
