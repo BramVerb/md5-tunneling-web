@@ -8,7 +8,7 @@ NOTE: You might experience some dropped frames, because it does use your GPU.
 
 ## Demo
 A demo can be found here:
-[md5-tunneling-web/](https://bramverb.github.io/md5-tunneling-web/)
+[md5-tunneling-web](https://bramverb.github.io/md5-tunneling-web/)
 
 ## About
 Based on Multi-Message Modifications Method and Tunnels, the program searches for two 128-bytes messages with same [MD5](https://en.wikipedia.org/wiki/MD5) hash.
