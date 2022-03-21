@@ -29,7 +29,7 @@ class Block2Generator {
     this.C1 = block1.C1;
     this.D1 = block1.D1;
     this.v1 = block1.v1;
-    this.v2 = block1.v1;
+    this.v2 = block1.v2;
   }
 
   iteration(X) {
@@ -722,6 +722,7 @@ class Block2Generator {
             const C0 = CC0;
             const D0 = DD0;
 
+
             const v1 = [...this.v1];
             const v2 = [...this.v2];
 
@@ -730,6 +731,13 @@ class Block2Generator {
               memcpy(v1, 64 + i * 4, x, i, 4);
               memcpy(v2, 64 + i * 4, Hx, i, 4);
             }
+            // console.log(v1.map(x => x.toString(16)));
+            // console.log(v2.map(x => x.toString(16)));
+            // console.log("itr_Q4: ", itr_q4);
+            // console.log("itr_Q9: ", itr_q9);
+            // if (v2[82] == 0xf6){
+            //   console.assert(v2[83] == 0xa4);
+            // }
             return { v1, v2, A0, B0, C0, D0 };
           } // End of Tunnel Q9
         } // End of MMMM Q4
