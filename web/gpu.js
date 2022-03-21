@@ -177,21 +177,6 @@ class Renderer {
         this.gl,
         this.shaderProgram2
       ),
-      // {
-      //   // projectionMatrix: gl.getUniformLocation(
-      //   //   shaderProgram,
-      //   //   "uProjectionMatrix"
-      //   // ),
-      //   seed: this.gl.getUniformLocation(this.shaderProgram2, "seed"),
-      //   // A0: this.gl.getUniformLocation(this.shaderProgram, "A0"),
-      //   // B0: this.gl.getUniformLocation(this.shaderProgram, "B0"),
-      //   // C0: this.gl.getUniformLocation(this.shaderProgram, "C0"),
-      //   // D0: this.gl.getUniformLocation(this.shaderProgram, "D0"),
-      //   // A1: this.gl.getUniformLocation(this.shaderProgram, "A1"),
-      //   // B1: this.gl.getUniformLocation(this.shaderProgram, "B1"),
-      //   // C1: this.gl.getUniformLocation(this.shaderProgram, "C1"),
-      //   // D1: this.gl.getUniformLocation(this.shaderProgram, "D1"),
-      // },
     };
     this.quad = initBuffers(this.gl);
     this.generator = new Block1CandidatesGenerator(seed);
@@ -224,6 +209,14 @@ class Renderer {
     return uniforms;
   }
 
+  loadUniforms1ui(uniformLocations, uniformValues) {
+    for(let name of Object.keys(uniformLocations)) {
+      if(name in uniformValues) {
+        this.gl.uniform1ui(uniformLocations[name], uniformValues[name] >>> 0);
+      }
+    }
+  }
+
   setupScene() {
     if (this.firstBlocks.length > 0) {
       const c = this.firstBlocks[0];
@@ -237,6 +230,11 @@ class Renderer {
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1)
         this.block2generator.iteration(this.block2seed);
+        this.loadUniforms1ui(programInfo.uniformLocations, {
+          seed: this.block2seed,
+          NUM_BITS_Q16: this.NUM_BITS_Q16,
+          ...this.block2generator,
+        });
       } else {
         if(this.block2generator.step2(this.NUM_BITS_Q16)) {
           seed2 = this.block2generator.X;
@@ -248,15 +246,6 @@ class Renderer {
       this.counter++;
       this.gl.uniform1ui(programInfo.uniformLocations.seed, this.block2seed >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.seed2, seed2 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.A0, this.block2generator.A0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.B0, this.block2generator.B0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.C0, this.block2generator.C0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.D0, this.block2generator.D0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.A1, this.block2generator.A1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.B1, this.block2generator.B1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.C1, this.block2generator.C1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.D1, this.block2generator.D1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.NUM_BITS_Q16, this.NUM_BITS_Q16 >>> 0);
       this.block = 2;
     } else {
       this.counter = 0;

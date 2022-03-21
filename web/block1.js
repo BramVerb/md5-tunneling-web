@@ -952,7 +952,6 @@ function Block1(input) {
                 const B1 = BB1;
                 const C1 = CC1;
                 const D1 = DD1;
-                console.log("initialized");
 
                 // We store both first blocks
                 for (i = 0; i < 16; i++) {
