@@ -656,7 +656,8 @@ class Block2Generator {
 
             Q[62] = Q[61] + RL(sigma_Q62, 10);
 
-            if (bit(Q[62], 26) != 1) continue;
+            // Not necessary
+            // if (bit(Q[62], 26) != 1) continue;
 
             if (bit(Q[62], 32) != bit(Q[60], 32)) continue;
 
@@ -664,7 +665,8 @@ class Block2Generator {
               Q[62] +
               RL(fI(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
 
-            if (bit(Q[63], 26) != 1) continue;
+            // Not necessary
+            // if (bit(Q[63], 26) != 1) continue;
 
             if (bit(Q[63], 32) != bit(Q[61], 32)) continue;
 

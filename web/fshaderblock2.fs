@@ -446,8 +446,8 @@ int Block2(uint id) {
 
             Q[55] = Q[54] + RL(I(Q[54], Q[53], Q[52]) + Q[51] + x[10] + 0xffeff47du, 15u);
 
-            if (bit(Q[55], 32u) != bit(Q[53], 32u))
-              continue;
+            /* if (bit(Q[55], 32u) != bit(Q[53], 32u)) */
+            /*   continue; */
 
             Q[56] = Q[55] + RL(I(Q[55], Q[54], Q[53]) + Q[52] + x[1] + 0x85845dd1u, 21u);
 
@@ -493,16 +493,18 @@ int Block2(uint id) {
 
             Q[62] = Q[61] + RL(sigma_Q62, 10u);
 
-            if (bit(Q[62], 26u) != 1u)
-              continue;
+            // Not necessary
+            /* if (bit(Q[62], 26u) != 1u) */
+            /*   continue; */
 
             if (bit(Q[62], 32u) != bit(Q[60], 32u))
               continue;
 
             Q[63] = Q[62] + RL(I(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bbu, 15u);
 
-            if (bit(Q[63], 26u) != 1u)
-              continue;
+            // Not necessary
+            /* if (bit(Q[63], 26u) != 1u) */
+            /*   continue; */
 
             if (bit(Q[63], 32u) != bit(Q[61], 32u))
               continue;
