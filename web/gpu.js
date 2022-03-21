@@ -1,3 +1,4 @@
+const nCollisions = 1000;
 //
 // creates a shader of the given type, uploads the source and
 // compiles it.
@@ -228,6 +229,7 @@ class Renderer {
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);
+        console.log('seed', (seed >>> 0).toString(16));
         this.loadUniforms1ui(programInfo.uniformLocations, {
           seed: this.block2seed,
           NUM_BITS_Q16: this.NUM_BITS_Q16,
@@ -369,7 +371,7 @@ class Renderer {
     if (goToNextBlock) {
       this.firstBlocks.pop();
     }
-    if (this.frames % 60 == 0) {
+    if (this.frames % 60 == 0 || this.fullCollisions >= nCollisions) {
       const seconds = (Date.now() - this.startTime) / 1000;
       updateStats({
         cps: (this.fullCollisions / seconds).toFixed(1),
