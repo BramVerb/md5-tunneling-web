@@ -1,4 +1,4 @@
-const nCollisions = 1000;
+const nCollisions = 1000000;
 //
 // creates a shader of the given type, uploads the source and
 // compiles it.
