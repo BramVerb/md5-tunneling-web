@@ -1,3 +1,4 @@
+const nCollisions = 1000000;
 //
 // creates a shader of the given type, uploads the source and
 // compiles it.
@@ -187,7 +188,7 @@ class Renderer {
     this.last = Date.now();
     this.frames = 0;
     this.next = this.generator.getnext(100000);
-    this.NUM_BITS_Q16 = 13;
+    this.NUM_BITS_Q16 = 11;
     this.counter = 0;
     this.blockTime = {
       block1: 0,
@@ -228,6 +229,7 @@ class Renderer {
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);
+        console.log('seed', (seed >>> 0).toString(16));
         this.loadUniforms1ui(programInfo.uniformLocations, {
           seed: this.block2seed,
           NUM_BITS_Q16: this.NUM_BITS_Q16,
@@ -366,10 +368,10 @@ class Renderer {
       }
     }
 
-    if (goToNextBlock) {
+    if (goToNextBlock && this.goToNextBlockWhenFound) {
       this.firstBlocks.pop();
     }
-    if (this.frames % 60 == 0) {
+    if (this.frames % 20 == 0 || this.fullCollisions >= nCollisions) {
       const seconds = (Date.now() - this.startTime) / 1000;
       updateStats({
         cps: (this.fullCollisions / seconds).toFixed(1),
@@ -400,30 +402,32 @@ class Renderer {
       return;
     }
     const start = Date.now();
-    if (this.next) {
-      this.setupScene();
-      if (this.block == 1) {
-        drawScene(this.gl, this.programInfo, this.quad);
-      } else {
-        drawScene(this.gl, this.programInfo2, this.quad);
-      }
-      const seed = this.next.seed;
-      this.next = this.generator.getnext(100000);
-      this.gl.readPixels(
-        0,
-        0,
-        256,
-        256,
-        this.gl.RGBA,
-        this.gl.UNSIGNED_BYTE,
-        this.pixelValues
-      );
-      this.readFrame(seed);
+    this.setupScene();
+    if (this.block == 1) {
+      drawScene(this.gl, this.programInfo, this.quad);
+    } else {
+      drawScene(this.gl, this.programInfo2, this.quad);
     }
+    const seed = this.next.seed;
+    this.next = this.generator.getnext(100000);
+    this.gl.readPixels(
+      0,
+      0,
+      256,
+      256,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      this.pixelValues
+    );
+    this.readFrame(seed);
     const took = Date.now() - start;
     this.blockTime["block" + this.block] += took;
     this.blockCount["block" + this.block] += 1;
-    this.animationFrame = requestAnimationFrame(this.frame.bind(this));
+    if(this.fullCollisions <= nCollisions) {
+      this.animationFrame = requestAnimationFrame(this.frame.bind(this));
+    } else {
+      console.log("DONE WITH ", this.fullCollisions, "collisions");
+    }
   }
 
   pause() {
@@ -444,6 +448,10 @@ class Renderer {
 }
 let renderer;
 
+function shouldGoToNextBlock() {
+  return document.getElementById("goToNextBlockWhenFound").checked;
+}
+
 document.getElementById("gpu").addEventListener("click", function () {
   if (!renderer) {
     const seedElement = document.getElementById("seed");
@@ -451,6 +459,7 @@ document.getElementById("gpu").addEventListener("click", function () {
     seedElement.setAttribute("disabled", true);
     console.log(seed >>> 0);
     renderer = new Renderer(seed);
+    renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
   if (renderer && !renderer.paused()) {
     document.getElementById("gpu").innerText = "Continue";
@@ -458,6 +467,12 @@ document.getElementById("gpu").addEventListener("click", function () {
   } else {
     document.getElementById("gpu").innerText = "STOP";
     renderer.start();
+  }
+});
+
+document.getElementById("goToNextBlockWhenFound").addEventListener('change', function () {
+  if(renderer) {
+    renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
 });
 

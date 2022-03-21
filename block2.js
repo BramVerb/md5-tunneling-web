@@ -29,7 +29,7 @@ class Block2Generator {
     this.C1 = block1.C1;
     this.D1 = block1.D1;
     this.v1 = block1.v1;
-    this.v2 = block1.v1;
+    this.v2 = block1.v2;
   }
 
   iteration(X) {
@@ -656,7 +656,8 @@ class Block2Generator {
 
             Q[62] = Q[61] + RL(sigma_Q62, 10);
 
-            if (bit(Q[62], 26) != 1) continue;
+            // Not necessary
+            // if (bit(Q[62], 26) != 1) continue;
 
             if (bit(Q[62], 32) != bit(Q[60], 32)) continue;
 
@@ -664,7 +665,8 @@ class Block2Generator {
               Q[62] +
               RL(fI(Q[62], Q[61], Q[60]) + Q[59] + x[2] + 0x2ad7d2bb, 15);
 
-            if (bit(Q[63], 26) != 1) continue;
+            // Not necessary
+            // if (bit(Q[63], 26) != 1) continue;
 
             if (bit(Q[63], 32) != bit(Q[61], 32)) continue;
 
@@ -673,7 +675,7 @@ class Block2Generator {
               RL(fI(Q[63], Q[62], Q[61]) + Q[60] + x[9] + 0xeb86d391, 21);
 
             // Condition not necessary (Sasaki), try to remove
-            if (bit(Q[64], 26) != 1) continue;
+            // if (bit(Q[64], 26) != 1) continue;
 
             // Block 2 is now completed. We verify if the differential path is
             // reached.
@@ -722,6 +724,7 @@ class Block2Generator {
             const C0 = CC0;
             const D0 = DD0;
 
+
             const v1 = [...this.v1];
             const v2 = [...this.v2];
 
@@ -730,6 +733,13 @@ class Block2Generator {
               memcpy(v1, 64 + i * 4, x, i, 4);
               memcpy(v2, 64 + i * 4, Hx, i, 4);
             }
+            // console.log(v1.map(x => x.toString(16)));
+            // console.log(v2.map(x => x.toString(16)));
+            // console.log("itr_Q4: ", itr_q4);
+            // console.log("itr_Q9: ", itr_q9);
+            // if (v2[82] == 0xf6){
+            //   console.assert(v2[83] == 0xa4);
+            // }
             return { v1, v2, A0, B0, C0, D0 };
           } // End of Tunnel Q9
         } // End of MMMM Q4
