@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>MD5 Tunneling</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <script src="helpers.js" defer></script>
+    <script src="block1.js" defer></script>
+    <script src="block2.js" defer></script>
+    <script type="text/glsl" src="vshader.vs" id="vshader"></script>
+    <script type="text/glsl" src="fshader.fs" id="fshader"></script>
+    <script src="gpu.js" defer></script>
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+    <h1>MD5 Tunneling Attack</h1>
+    <section>
+      <h2 class="active" id="inputs">Inputs</h2>
+      <label for="seed"
+             >Seed (in hex)
+             <input id="seed" type="text" value="4" />
+      </label> <button id="gpu">Start</button>
+      </br>
+      <label for="showcontent"
+             >Show content of collisions
+             <input id="showcontent" type="checkbox" value="true" />
+      </label>
+      </br>
+    </section>
+    <section>
+      <h2>Output</h2>
+      <h3 id="block1">Block 1</h3>
+      <h3 id="block2">Block 2</h3>
+    </section>
+    <section>
+      <h2>Stats</h2>
+      <div class="stats">
+        <span>Collisions per second (c/s)</span>
+        <span id="stat-cps"></span>
+        <span>Collisisons (c)</span>
+        <span id="stat-collisions"></span>
+
+        <span>Time (s)</span>
+        <span id="stat-time"></span>
+
+        <span>Frames per second</span>
+        <span id="stat-fps"></span>
+
+        <span>Average collision time (s)</span>
+        <span id="stat-avg"></span>
+
+        <span class="margin">Block 1 time total (s)</span>
+        <span class="margin" id="stat-block1"></span>
+        <span>Block 2 time total (s)</span>
+        <span id="stat-block2"></span>
+
+        <span>Block 1 frame count</span>
+        <span id="stat-block1count"></span>
+        <span>Block 2 frame count</span>
+        <span id="stat-block2count"></span>
+
+        <span>Block 1 fps</span>
+        <span id="stat-block1fps"></span>
+        <span>Block 2 fps</span>
+        <span id="stat-block2fps"></span>
+
+      </div>
+    </section>
+    <section>
+      <canvas id="canvas" width="256", height="256"></canvas>
+    </section>
+    <section>
+      <h2>Collisisons</h2>
+      <ol id="blocks">
+      </ol>
+    </section>
+    <div id="bottom"></div>
+<style>
+body {
+  font-family: monospace;
+  background-color: black;
+  color: white;
+}
+.stats {
+  display: grid;
+  grid-template-columns: 220px 100px;
+  border: 1px solid white;
+  max-width: fit-content;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.stats > .margin {
+  margin-top: 10px;
+}
+
+.stats > span:nth-child(even) {
+  text-align: right;
+}
+
+.stats > span {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+.active:before {
+  content: "> ";
+}
+ .active {
+   /*font-size: 200%;*/
+ }
+ a {
+   padding: 5px 20px;
+   border: 1px solid white;
+   margin-right: 10px;
+   color: white;
+ }
+ #blocks section > a{
+ }
+ .block {
+   display: flex;
+   margin-top: 10px;
+   border: 1px solid gray;
+   padding: 5px 20px;
+ }
+ .block > div {
+   flex: 1;
+   word-break: break-all;
+   overflow-wrap: break-word;
+ }
+ canvas {
+   z-index: -1;
+   top: 10px;
+   right: 20px;
+   border: 1px solid white;
+   margin-top: 10px;
+ }
+
+@media screen and (min-width: 640px) {
+  canvas {
+    position: absolute;
+  }
+}
+
+@media screen and (min-width: 960px) {
+  canvas {
+     transform: scale(2, 2);
+     transform-origin: top right;
+  }
+}
+
+#blocks div.block {
+  display: none;
+}
+
+#blocks.show div.block {
+  display: flex;
+}
+
+ 
+
+</style>
+  </body>
+</html>
+
+
