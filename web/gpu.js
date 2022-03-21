@@ -188,7 +188,7 @@ class Renderer {
     this.last = Date.now();
     this.frames = 0;
     this.next = this.generator.getnext(100000);
-    this.NUM_BITS_Q16 = 13;
+    this.NUM_BITS_Q16 = 11;
     this.counter = 0;
     this.blockTime = {
       block1: 0,
@@ -361,14 +361,14 @@ class Renderer {
           if (this.block === 1) {
             this.firstBlocks.push({ x, y, v, seed });
           } else if (this.block === 2) {
-            // goToNextBlock = true;
+            goToNextBlock = true;
             this.determineTunnelValues2(x, y, v);
           }
         }
       }
     }
 
-    if (goToNextBlock) {
+    if (goToNextBlock && this.goToNextBlockWhenFound) {
       this.firstBlocks.pop();
     }
     if (this.frames % 20 == 0 || this.fullCollisions >= nCollisions) {
@@ -448,6 +448,10 @@ class Renderer {
 }
 let renderer;
 
+function shouldGoToNextBlock() {
+  return document.getElementById("goToNextBlockWhenFound").checked;
+}
+
 document.getElementById("gpu").addEventListener("click", function () {
   if (!renderer) {
     const seedElement = document.getElementById("seed");
@@ -455,6 +459,7 @@ document.getElementById("gpu").addEventListener("click", function () {
     seedElement.setAttribute("disabled", true);
     console.log(seed >>> 0);
     renderer = new Renderer(seed);
+    renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
   if (renderer && !renderer.paused()) {
     document.getElementById("gpu").innerText = "Continue";
@@ -462,6 +467,12 @@ document.getElementById("gpu").addEventListener("click", function () {
   } else {
     document.getElementById("gpu").innerText = "STOP";
     renderer.start();
+  }
+});
+
+document.getElementById("goToNextBlockWhenFound").addEventListener('change', function () {
+  if(renderer) {
+    renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
 });
 
