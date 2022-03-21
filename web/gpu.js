@@ -361,7 +361,7 @@ class Renderer {
           if (this.block === 1) {
             this.firstBlocks.push({ x, y, v, seed });
           } else if (this.block === 2) {
-            goToNextBlock = true;
+            // goToNextBlock = true;
             this.determineTunnelValues2(x, y, v);
           }
         }
@@ -371,7 +371,7 @@ class Renderer {
     if (goToNextBlock) {
       this.firstBlocks.pop();
     }
-    if (this.frames % 60 == 0 || this.fullCollisions >= nCollisions) {
+    if (this.frames % 20 == 0 || this.fullCollisions >= nCollisions) {
       const seconds = (Date.now() - this.startTime) / 1000;
       updateStats({
         cps: (this.fullCollisions / seconds).toFixed(1),
