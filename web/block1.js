@@ -7,7 +7,6 @@ const USE_B1_Q20 = true;
 
 const v1 = newArray(128);
 const v2 = newArray(128);
-let A0, B0, C0, D0, A1, B1, C1, D1;
 
 // Mask generation for tunnel Q4 - 1 bit
 const Q4_mask_bits = [26];
@@ -52,6 +51,7 @@ class Block1CandidatesGenerator {
 
     return this.X;
   }
+
 
   getnext(max_iterations) {
     const IV1 = 0x67452301;
@@ -944,21 +944,24 @@ function Block1(input) {
                   continue;
 
                 // We store the intermediate hash values
-                A0 = AA0;
-                B0 = BB0;
-                C0 = CC0;
-                D0 = DD0;
-                A1 = AA1;
-                B1 = BB1;
-                C1 = CC1;
-                D1 = DD1;
+                const A0 = AA0;
+                const B0 = BB0;
+                const C0 = CC0;
+                const D0 = DD0;
+                const A1 = AA1;
+                const B1 = BB1;
+                const C1 = CC1;
+                const D1 = DD1;
+                console.log("initialized");
 
                 // We store both first blocks
                 for (i = 0; i < 16; i++) {
                   memcpy(v1, 4 * i, x, i, 4);
                   memcpy(v2, 4 * i, Hx, i, 4);
                 }
-                return 0;
+                return {
+                  v1, v2, A0, B0, C0, D0, A1, B1, C1, D1
+                };
               } // End of Q9 Tunnel
             } // End of Q4 Tunnel
           } // End of Q14 Tunnel
@@ -966,5 +969,5 @@ function Block1(input) {
       } // End of Q20 Tunnel
     } // End of Q10 Tunnel
   } // End of general for
-  return -1; // Collision not found;
+  return undefined; // Collision not found;
 }

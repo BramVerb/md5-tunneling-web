@@ -206,6 +206,3 @@ function memcpy(a, ai, b, bi, l) {
   a[ai + 2] = (b[bi] >>> 16) & 0xff;
   a[ai + 3] = (b[bi] >>> 24) & 0xff;
 }
-
-
-let hash_A0 = 0, hash_B0 = 0, hash_C0 = 0, hash_D0 = 0;

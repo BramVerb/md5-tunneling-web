@@ -249,9 +249,10 @@ class Renderer {
       const { x, y, v, seed } = c;
       let seed2 = this.block2seed;
       if(this.counter == 0){
-        this.determineTunnelValues(x, y, v, seed);
+        const block1 = this.determineTunnelValues(x, y, v, seed);
         this.block2seed = (X >>> 0);
         seed2 = this.block2seed;
+        this.block2generator.initBlock1(block1)
         this.block2generator.iteration(this.block2seed);
       } else {
         if(this.block2generator.step2(this.NUM_BITS_Q16)) {
@@ -264,14 +265,14 @@ class Renderer {
       this.counter++;
       this.gl.uniform1ui(programInfo.uniformLocations.seed, this.block2seed >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.seed2, seed2 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.A0, A0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.B0, B0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.C0, C0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.D0, D0 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.A1, A1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.B1, B1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.C1, C1 >>> 0);
-      this.gl.uniform1ui(programInfo.uniformLocations.D1, D1 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.A0, this.block2generator.A0 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.B0, this.block2generator.B0 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.C0, this.block2generator.C0 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.D0, this.block2generator.D0 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.A1, this.block2generator.A1 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.B1, this.block2generator.B1 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.C1, this.block2generator.C1 >>> 0);
+      this.gl.uniform1ui(programInfo.uniformLocations.D1, this.block2generator.D1 >>> 0);
       this.gl.uniform1ui(programInfo.uniformLocations.NUM_BITS_Q16, this.NUM_BITS_Q16 >>> 0);
       this.block = 2;
     } else {
@@ -330,9 +331,10 @@ class Renderer {
     };
     // console.time("block 1 collision");
     const block1 = Block1(input);
-    if (block1 < 0) {
+    if (!block1) {
       console.error("first block collision not found on the CPU");
     }
+    return block1;
     // console.timeEnd("block 1 collision");
     // console.time('block 2 collision');
     // console.timeEnd('block 2 collision');
@@ -362,8 +364,10 @@ class Renderer {
     X = this.block2seed >>> 0;
     // console.time("block 2 collision");
     // TODO generate multiple blocks at a time from different collisions
-    const block2 = Block2(input);
-    if (block2 < 0) {
+    // const block2 = Block2(input);
+    const block2 = this.block2generator.getCollision(startQ4, startQ9, this.NUM_BITS_Q16);
+    console.log(block2);
+    if (!block2) {
       console.error("collision block 2 not found on cpu", input);
       return;
     }
@@ -372,24 +376,10 @@ class Renderer {
     // console.time('block 2 collision');
     // console.log('collision block 2', Block2());
     // console.timeEnd('block 2 collision');
-    const a = String.fromCharCode(...v1);
-    const b = String.fromCharCode(...v2);
+    const a = String.fromCharCode(...block2.v1);
+    const b = String.fromCharCode(...block2.v2);
 
-    let obj = createMD5Object();
-    obj.Hx[0] = 0x00000080;
-    obj.Hx[14] = 0x00000400;
-    obj.a = hash_A0;
-    obj.b = hash_B0;
-    obj.c = hash_C0;
-    obj.d = hash_D0;
-    obj = HMD5Tr(obj);
-    hash_A0 += obj.a;
-    hash_B0 += obj.b;
-    hash_C0 += obj.c;
-    hash_D0 += obj.d;
-    const hash =
-      toHex(hash_A0) + toHex(hash_B0) + toHex(hash_C0) + toHex(hash_D0);
-    newCollision(a, b, v1, v2, hash);
+    this.block2generator.calculateHash(block2);
     return input;
   }
   readFrame(seed) {
