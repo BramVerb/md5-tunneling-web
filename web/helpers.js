@@ -42,10 +42,6 @@ function IIx(a, b, c, d, x, s, ac) {
   return (a + b) >>> 0;
 }
 
-function printf(...args) {
-  console.log(...args);
-}
-
 function createMD5Object() {
   return {
     a: 0,
@@ -54,12 +50,6 @@ function createMD5Object() {
     d: 0,
     Hx: new Array(16).fill(0),
   };
-}
-function printHx(Hx) {
-  console.log(
-    "Hx",
-    Hx.slice(0, 16).map((x) => x >>> 0)
-  );
 }
 
 function HMD5Tr(m) {

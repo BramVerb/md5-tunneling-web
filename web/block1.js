@@ -46,12 +46,11 @@ class Block1CandidatesGenerator {
   }
 
   rng() {
-    this.X = ((1664525 * this.X + 1013904223) & 0xffffffff);
+    this.X = (1664525 * this.X + 1013904223) & 0xffffffff;
     //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
 
     return this.X;
   }
-
 
   getnext(max_iterations) {
     const IV1 = 0x67452301;
@@ -152,25 +151,25 @@ class Block1CandidatesGenerator {
       // 0     = ***. .... .... .*** ***. .... *... ....  0xe007e080
       // 1     = .... .... .... *... ...* ...* .... ....  0x00081100
       // Q[11] = .... ..** .... .... .... .... .... ....  0x03000000
-      Q[12] = ((rng() & 0x1cf00e7f) + 0x00081100 + (Q[11] & 0x03000000));
+      Q[12] = (rng() & 0x1cf00e7f) + 0x00081100 + (Q[11] & 0x03000000);
 
       // Q[13] = 01.. ..01 .... 1111 111. ...0 0... 1...
       // RNG   = ..** **.. **** .... ...* ***. .*** .***  0x3cf01e77
       // 0     = *... ..*. .... .... .... ...* *... ....  0x82000180
       // 1     = .*.. ...* .... **** ***. .... .... *...  0x410fe008
-      Q[13] = ((rng() & 0x3cf01e77) + 0x410fe008);
+      Q[13] = (rng() & 0x3cf01e77) + 0x410fe008;
 
       // Q[14] = 000. ..00 .... 1011 111. ...1 1... 1...
       // RNG   = ...* **.. **** .... ...* ***. .*** .***  0x1cf01e77
       // 0     = ***. ..** .... .*.. .... .... .... ....  0xe3040000
       // 1     = .... .... .... *.** ***. ...* *... *...  0x000be188
-      Q[14] = ((rng() & 0x1cf01e77) + 0x000be188);
+      Q[14] = (rng() & 0x1cf01e77) + 0x000be188;
 
       // Q[15] = v110 0001 ..V. .... 10.. .... .000 0000
       // RNG   = *... .... **** **** ..** **** *... ....  0x80ff3f80
       // 0     = ...* ***. .... .... .*.. .... .*** ****  0x1e00407f
       // 1     = .**. ...* .... .... *... .... .... ....  0x61008000
-      Q[15] = ((rng() & 0x80ff3f80) + 0x61008000);
+      Q[15] = (rng() & 0x80ff3f80) + 0x61008000;
 
       // Q[16] = ^010 00.. ..A. .... v... .... .000 v000
       // RNG   = .... ..** **.* **** **** **** *... *...  0x03dfff88
@@ -178,33 +177,36 @@ class Block1CandidatesGenerator {
       // 1     = ..*. .... .... .... .... .... .... ....  0x20000000
       // Q[15] = *... .... .... .... .... .... .... ....  0x80000000
       // ~Q[15]= .... .... ..*. .... .... .... .... ....  0x00200000
-    Q[16] = (rng() & 0x03dfff88) + 0x20000000 + (Q[15] & 0x80000000) +
-            ((~Q[15]) & 0x00200000);
+      Q[16] =
+        (rng() & 0x03dfff88) +
+        0x20000000 +
+        (Q[15] & 0x80000000) +
+        (~Q[15] & 0x00200000);
 
       // Q[17] = ^1v. .... .... ..0. ^... .... .... ^...
       // RNG   = ..** **** **** **.* .*** **** **** .***  0x3ffd7ff7
       // 0     = .... .... .... ..*. .... .... .... ....  0x00020000
       // 1     = .*.. .... .... .... .... .... .... ....  0x40000000
       // Q[16] = *... .... .... .... *... .... .... *...  0x80008008
-      Q[17] = ((rng() & 0x3ffd7ff7) + 0x40000000 + (Q[16] & 0x80008008));
+      Q[17] = (rng() & 0x3ffd7ff7) + 0x40000000 + (Q[16] & 0x80008008);
 
       // Start message creation
-      x[0] = (RR(Q[1] - QM0, 7) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478);
-      x[1] =
-        (RR(Q[17] - Q[16], 5) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562);
-        0;
-      x[4] = (RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf);
-      x[5] = (RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62a);
-      x[6] = (RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613);
-      x[10] = (RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1);
-      x[11] = (RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be);
-      x[15] = (RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821);
+      x[0] = RR(Q[1] - QM0, 7) - F(QM0, QM1, QM2) - QM3 - 0xd76aa478;
+      x[1] = RR(Q[17] - Q[16], 5) - G(Q[16], Q[15], Q[14]) - Q[13] - 0xf61e2562;
+      0;
+      x[4] = RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf;
+      x[5] = RR(Q[6] - Q[5], 12) - F(Q[5], Q[4], Q[3]) - Q[2] - 0x4787c62a;
+      x[6] = RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613;
+      x[10] = RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1;
+      x[11] = RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be;
+      x[15] =
+        RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821;
 
       // Q[2] = .... .... .... .... .... .... .... ....
-      Q[2] = ((Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756, 12)));
+      Q[2] = Q[1] + RL(F(Q[1], QM0, QM1) + QM2 + x[1] + 0xe8c7b756, 12);
 
       // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      Q[18] = ((Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9)));
+      Q[18] = Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9);
 
       // Q[17] = ^1v. .... .... ..0. ^... .... .... ^...
       // Q[18] = ^.^. .... .... ..1. .... .... .... ....
@@ -223,7 +225,6 @@ class Block1CandidatesGenerator {
       // Q[19] = ^... .... .... ..0. .... .... .... ....
       //         1000 0000 0000 0010 0000 0000 0000 0000  0x80020000
       if (((Q[19] ^ Q[18]) & 0x80020000) != 0x00020000) {
-        /* printf("not satisfied Q18, Q19\n"); */
         continue;
       }
 
@@ -286,13 +287,13 @@ function Block1(input) {
   const IV3 = 0x98badcfe;
   const IV4 = 0x10325476;
 
-  const startQ4 =input && input.startQ4 || 0;
-  const startQ9 =input && input.startQ9 || 0;
-  const startQ13 =input && input.startQ13 || 0;
-  const startQ10 =input && input.startQ10 || 0;
-  const startQ20 =input && input.startQ20 || 0;
-  const startQ14 =input && input.startQ14 || 0;
-  const seed =input && input.seed || X;
+  const startQ4 = (input && input.startQ4) || 0;
+  const startQ9 = (input && input.startQ9) || 0;
+  const startQ13 = (input && input.startQ13) || 0;
+  const startQ10 = (input && input.startQ10) || 0;
+  const startQ20 = (input && input.startQ20) || 0;
+  const startQ14 = (input && input.startQ14) || 0;
+  const seed = (input && input.seed) || X;
   // const Q = newArray(65);
   // const x = newArray(16);
   let sigma_Q23 = 0,
@@ -361,7 +362,6 @@ function Block1(input) {
     tmp_q14 = Q[14];
     tmp_q20 = Q[20];
     tmp_q21 = Q[21];
-    // printHx(Q);
 
     ///////////////////////////////////////////////////////////////
     ///                       Tunnel Q10                         //
@@ -909,12 +909,10 @@ function Block1(input) {
                 // Note that message 1 block 1 is x = x[0]||...||x[15]
                 // While message 2 block 1 is Hx = x + C
 
-                // TODO where does HX come from
                 // Message 2 block 1 hash computation
                 let obj = createMD5Object();
                 let { Hx } = obj;
                 for (i = 0; i < 16; i++) Hx[i] = x[i];
-                // printHx(Hx);
 
                 Hx[4] = x[4] + 0x80000000;
                 Hx[11] = x[11] + 0x00008000;
@@ -959,7 +957,16 @@ function Block1(input) {
                   memcpy(v2, 4 * i, Hx, i, 4);
                 }
                 return {
-                  v1, v2, A0, B0, C0, D0, A1, B1, C1, D1
+                  v1,
+                  v2,
+                  A0,
+                  B0,
+                  C0,
+                  D0,
+                  A1,
+                  B1,
+                  C1,
+                  D1,
                 };
               } // End of Q9 Tunnel
             } // End of Q4 Tunnel

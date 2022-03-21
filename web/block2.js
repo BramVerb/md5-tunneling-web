@@ -1,5 +1,3 @@
-const USE_B2_Q9 = true;
-
 class Block2Generator {
   constructor() {
     this.Q = newArray(65);
@@ -40,10 +38,8 @@ class Block2Generator {
     this.QM0 = this.B0;
     this.QM1 = this.C0;
     this.QM2 = this.D0;
-    const QM3 = this.QM3;
     const QM0 = this.QM0;
     const QM1 = this.QM1;
-    const QM2 = this.QM2;
     const Q = this.Q;
     const rng = this.rng.bind(this);
     const I = QM0 & 0x80000000;
@@ -328,15 +324,11 @@ class Block2Generator {
       mask_Q9,
     } = this;
 
-    // Mask generation for tunnel Q9 - 8 bits
-
     const itr_q4_start = startQ4;
     const itr_q4_end = startQ4 + 1;
-
     const itr_q9_start = startQ9;
     const itr_q9_end = startQ9 + 1;
     // Start block 2 generation.
-    // TO-DO: add a time limit for collision search.
     for (itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
       Q[1] = this.tmp_q1;
       Q[2] = this.tmp_q2;
@@ -490,7 +482,7 @@ class Block2Generator {
           ///////////////////////////////////////////////////////////////
           // Tunnel Q9 - 8 bits
           for (itr_q9 = itr_q9_start; itr_q9 < itr_q9_end; itr_q9++) {
-            Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0];
+            Q[9] = tmp_q9 ^ mask_Q9[itr_q9];
 
             x[8] = RR(Q[9] - Q[8], 7) - F(Q[8], Q[7], Q[6]) - Q[5] - 0x698098d8;
             x[9] =

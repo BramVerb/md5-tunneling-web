@@ -82,22 +82,15 @@ function initBuffers(gl) {
   // JavaScript array, then use it to fill the current buffer.
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-  return {
-    position: positionBuffer,
-  };
+  return { position: positionBuffer };
 }
 
 function drawScene(gl, programInfo, buffers) {
-  gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-  gl.clearDepth(1.0); // Clear everything
-  gl.enable(gl.DEPTH_TEST); // Enable depth testing
-  gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clearDepth(1.0);
+  gl.disable(gl.DEPTH_TEST);
   // Clear the canvas before we start drawing on it.
-
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
   {
@@ -120,11 +113,8 @@ function drawScene(gl, programInfo, buffers) {
   }
 
   // Tell WebGL to use our program when drawing
-
   gl.useProgram(programInfo.program);
-
   // Set the shader uniforms
-
   {
     const offset = 0;
     const vertexCount = 4;
@@ -143,10 +133,6 @@ class Renderer {
       alert("unable to init opengl");
       return;
     }
-    // Set clear color to black, fully opaque
-    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    // Clear the color buffer with specified clear color
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     const shared = getSourceSynch("shared.fs");
     const vshader = getSourceSynch("vshader.vs");
     const fshader = shared + getSourceSynch("fshaderblock1.fs");
@@ -173,7 +159,19 @@ class Renderer {
         ),
       },
       uniformLocations: this.getUniforms(
-        ["seed", "A0", "B0", "C0", "D0", "A1", "B1", "C1", "D1", "NUM_BITS_Q16", "seed2"],
+        [
+          "seed",
+          "A0",
+          "B0",
+          "C0",
+          "D0",
+          "A1",
+          "B1",
+          "C1",
+          "D1",
+          "NUM_BITS_Q16",
+          "seed2",
+        ],
         this.gl,
         this.shaderProgram2
       ),
@@ -192,12 +190,12 @@ class Renderer {
     this.NUM_BITS_Q16 = 13;
     this.counter = 0;
     this.blockTime = {
-      "block1": 0,
-      "block2": 0,
+      block1: 0,
+      block2: 0,
     };
     this.blockCount = {
-      "block1": 0,
-      "block2": 0,
+      block1: 0,
+      block2: 0,
     };
   }
 
@@ -210,8 +208,8 @@ class Renderer {
   }
 
   loadUniforms1ui(uniformLocations, uniformValues) {
-    for(let name of Object.keys(uniformLocations)) {
-      if(name in uniformValues) {
+    for (let name of Object.keys(uniformLocations)) {
+      if (name in uniformValues) {
         this.gl.uniform1ui(uniformLocations[name], uniformValues[name] >>> 0);
       }
     }
@@ -224,11 +222,11 @@ class Renderer {
       this.gl.useProgram(programInfo.program);
       const { x, y, v, seed } = c;
       let seed2 = this.block2seed;
-      if(this.counter == 0){
+      if (this.counter == 0) {
         const block1 = this.determineTunnelValues(x, y, v, seed);
-        this.block2seed = (X >>> 0);
+        this.block2seed = X >>> 0;
         seed2 = this.block2seed;
-        this.block2generator.initBlock1(block1)
+        this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);
         this.loadUniforms1ui(programInfo.uniformLocations, {
           seed: this.block2seed,
@@ -236,7 +234,7 @@ class Renderer {
           ...this.block2generator,
         });
       } else {
-        if(this.block2generator.step2(this.NUM_BITS_Q16)) {
+        if (this.block2generator.step2(this.NUM_BITS_Q16)) {
           seed2 = this.block2generator.X;
         } else {
           this.firstBlocks.pop();
@@ -244,7 +242,10 @@ class Renderer {
         }
       }
       this.counter++;
-      this.gl.uniform1ui(programInfo.uniformLocations.seed, this.block2seed >>> 0);
+      this.gl.uniform1ui(
+        programInfo.uniformLocations.seed,
+        this.block2seed >>> 0
+      );
       this.gl.uniform1ui(programInfo.uniformLocations.seed2, seed2 >>> 0);
       this.block = 2;
     } else {
@@ -309,17 +310,31 @@ class Renderer {
   }
 
   determineTunnelValues2(x, y, output) {
-    const {startQ4, startQ9} = this.block2generator.determineTunnelValues(x, y, output);
-    const block2 = this.block2generator.getCollision(startQ4, startQ9, this.NUM_BITS_Q16);
+    const { startQ4, startQ9 } = this.block2generator.determineTunnelValues(
+      x,
+      y,
+      output
+    );
+    const block2 = this.block2generator.getCollision(
+      startQ4,
+      startQ9,
+      this.NUM_BITS_Q16
+    );
     if (!block2) {
-      console.error("collision block 2 not found on cpu", {x, y, output, startQ4, startQ9});
+      console.error("collision block 2 not found on cpu", {
+        x,
+        y,
+        output,
+        startQ4,
+        startQ9,
+      });
       return false;
     }
     this.fullCollisions += 1;
     const a = String.fromCharCode(...block2.v1);
     const b = String.fromCharCode(...block2.v2);
     const hash = this.block2generator.calculateHash(block2);
-    newCollision(a, b, block2.v1, block2.v2, hash)
+    newCollision(a, b, block2.v1, block2.v2, hash);
   }
 
   readFrame(seed) {
@@ -351,7 +366,7 @@ class Renderer {
       }
     }
 
-    if(goToNextBlock) {
+    if (goToNextBlock) {
       this.firstBlocks.pop();
     }
     if (this.frames % 60 == 0) {
@@ -363,12 +378,18 @@ class Renderer {
         time: seconds.toFixed(1),
         block1: (this.blockTime.block1 / 1000).toFixed(1),
         block2: (this.blockTime.block2 / 1000).toFixed(1),
-        block1count: (this.blockCount.block1),
-        block2count: (this.blockCount.block2),
-        block1fps: (this.blockCount.block1 / (this.blockTime.block1/1000)).toFixed(1),
-        block2fps: (this.blockCount.block2 / (this.blockTime.block2/1000)).toFixed(1),
+        block1count: this.blockCount.block1,
+        block2count: this.blockCount.block2,
+        block1fps: (
+          this.blockCount.block1 /
+          (this.blockTime.block1 / 1000)
+        ).toFixed(1),
+        block2fps: (
+          this.blockCount.block2 /
+          (this.blockTime.block2 / 1000)
+        ).toFixed(1),
         avg: (seconds / this.fullCollisions).toFixed(1),
-      })
+      });
     }
   }
 
@@ -400,11 +421,10 @@ class Renderer {
       this.readFrame(seed);
     }
     const took = Date.now() - start;
-    this.blockTime["block"+this.block] += took;
-    this.blockCount["block"+this.block] += 1;
+    this.blockTime["block" + this.block] += took;
+    this.blockCount["block" + this.block] += 1;
     this.animationFrame = requestAnimationFrame(this.frame.bind(this));
   }
-
 
   pause() {
     cancelAnimationFrame(renderer.animationFrame);
@@ -416,7 +436,7 @@ class Renderer {
     return !this.animationFrame;
   }
   start() {
-    const diff = (Date.now() - this.pausedSince)
+    const diff = Date.now() - this.pausedSince;
     this.startTime += diff;
     this.last += diff;
     renderer.frame();
@@ -425,21 +445,21 @@ class Renderer {
 let renderer;
 
 document.getElementById("gpu").addEventListener("click", function () {
-  if(!renderer) {
+  if (!renderer) {
     const seedElement = document.getElementById("seed");
     seed = parseInt(seedElement.value, 16);
     seedElement.setAttribute("disabled", true);
-    console.log(seed>>>0);
+    console.log(seed >>> 0);
     renderer = new Renderer(seed);
   }
-  if(renderer && !renderer.paused()) {
+  if (renderer && !renderer.paused()) {
     document.getElementById("gpu").innerText = "Continue";
     renderer.pause();
   } else {
     document.getElementById("gpu").innerText = "STOP";
     renderer.start();
   }
-})
+});
 
 function bottom() {
   document.getElementById("bottom").scrollIntoView({ behavior: "smooth" });
