@@ -1,6 +1,5 @@
 const USE_B2_Q9 = true;
 
-
 class Block2Generator {
   constructor() {
     this.Q = newArray(65);
@@ -15,9 +14,8 @@ class Block2Generator {
     this.mask_Q4 = generate_mask(this.Q4_strength, this.Q4_mask_bits);
   }
 
-
   rng() {
-    this.X = ((1664525 * this.X + 1013904223) & 0xffffffff);
+    this.X = (1664525 * this.X + 1013904223) & 0xffffffff;
     //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
 
     return this.X;
@@ -49,7 +47,7 @@ class Block2Generator {
     const QM1 = this.QM1;
     const QM2 = this.QM2;
     const Q = this.Q;
-    const rng = this.rng.bind(this)
+    const rng = this.rng.bind(this);
     const I = QM0 & 0x80000000;
     const not_I = ~QM0 & 0x80000000;
     // Q[ 1] = ~Ivvv  010v  vv1v  vvv1  .vvv  0vvv  vv0.  ...v
@@ -197,8 +195,8 @@ class Block2Generator {
     const rng = this.rng.bind(this);
     const Q = this.Q;
     const x = this.x;
-    if (this.doneStep >= Math.pow(2, Math.min(25, NUM_BITS_Q16+8))) {
-      console.warn('giving up on the second block');
+    if (this.doneStep >= Math.pow(2, Math.min(25, NUM_BITS_Q16 + 8))) {
+      console.warn("giving up on the second block");
       return false;
     }
     for (let itr_q16 = 0; itr_q16 < Math.pow(2, NUM_BITS_Q16); itr_q16++) {
@@ -268,7 +266,11 @@ class Block2Generator {
       ///                      MMMM Q1/Q2                          //
       ///////////////////////////////////////////////////////////////
       // MMMM Q1/Q2 - variable bits
-      for (let itr_q1q2 = 0; itr_q1q2 < Math.pow(2, this.Q1Q2_strength); itr_q1q2++) {
+      for (
+        let itr_q1q2 = 0;
+        itr_q1q2 < Math.pow(2, this.Q1Q2_strength);
+        itr_q1q2++
+      ) {
         Q[4] = this.tmp_q4;
         Q[9] = this.tmp_q9;
 
@@ -282,19 +284,19 @@ class Block2Generator {
 
   calculateHash(block2) {
     let obj = createMD5Object();
+    let { A0, B0, C0, D0 } = block2;
     obj.Hx[0] = 0x00000080;
     obj.Hx[14] = 0x00000400;
-    obj.a = block2.A0;
-    obj.b = block2.B0;
-    obj.c = block2.C0;
-    obj.d = block2.D0;
+    obj.a = A0;
+    obj.b = B0;
+    obj.c = C0;
+    obj.d = D0;
     obj = HMD5Tr(obj);
-    block2.A0 += obj.a;
-    block2.B0 += obj.b;
-    block2.C0 += obj.c;
-    block2.D0 += obj.d;
-    const hash = toHex(block2.A0) + toHex(block2.B0) + toHex(block2.C0) + toHex(block2.D0);
-    return hash;
+    A0 += obj.a;
+    B0 += obj.b;
+    C0 += obj.c;
+    D0 += obj.d;
+    return toHex(A0) + toHex(B0) + toHex(C0) + toHex(D0);
   }
 
   getCollision(startQ4, startQ9, NUM_BITS_Q16) {
@@ -305,7 +307,7 @@ class Block2Generator {
     const x = [...this.x];
 
     // TODO different way?
-    const stub = {X : this.X};
+    const stub = { X: this.X };
     const rng = this.rng.bind(stub);
 
     let i = 0,
@@ -314,15 +316,21 @@ class Block2Generator {
       itr_q9 = 0,
       itr_q4 = 0;
     const {
-      mask_Q1Q2, Q1_fix, Q2_fix, Q1Q2_strength,
-      QM0, QM1, QM2, QM3,
+      mask_Q1Q2,
+      Q1_fix,
+      Q2_fix,
+      Q1Q2_strength,
+      QM0,
+      QM1,
+      QM2,
+      QM3,
       tmp_q1,
       tmp_q2,
       tmp_q4,
       tmp_q9,
-      mask_Q4,mask_Q9,
+      mask_Q4,
+      mask_Q9,
     } = this;
-    console.log(tmp_q1, tmp_q2, tmp_q4, tmp_q9);
 
     // QM3 = A0;
     // QM0 = B0;
@@ -336,9 +344,6 @@ class Block2Generator {
 
     const itr_q9_start = startQ9;
     const itr_q9_end = startQ9 + 1;
-    console.log('X in getCollision', this.X);
-
-    // console.warn("BLOCK 2 X: ", X >>> 0);
     // Start block 2 generation.
     // TO-DO: add a time limit for collision search.
     for (let it = 0; it <= 0; it++) {
@@ -364,7 +369,8 @@ class Block2Generator {
 
         x[1] = RR(Q[2] - Q[1], 12) - F(Q[1], QM0, QM1) - QM2 - 0xe8c7b756;
         x[6] = RR(Q[7] - Q[6], 17) - F(Q[6], Q[5], Q[4]) - Q[3] - 0xa8304613;
-        x[11] = RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be;
+        x[11] =
+          RR(Q[12] - Q[11], 22) - F(Q[11], Q[10], Q[9]) - Q[8] - 0x895cd7be;
 
         // Q[17] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // Extra conditions: Σ17,25 ~ Σ17,27 not all 1
@@ -380,7 +386,8 @@ class Block2Generator {
         if ((Q[17] & 0x80028008) != (Q[16] & 0x80028008)) continue;
 
         // Q[18] ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Q[18] = Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9);
+        Q[18] =
+          Q[17] + RL(G(Q[17], Q[16], Q[15]) + Q[14] + x[6] + 0xc040b340, 9);
 
         // Q[18] =  ^.^.  ....  ....  ..1.  ....  ....  ....  ....
         if (bit(Q[18], 18) != 1) continue;
@@ -400,7 +407,8 @@ class Block2Generator {
 
         if (bit(Q[19], 32) != bit(Q[18], 32)) continue;
 
-        x[10] = RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1;
+        x[10] =
+          RR(Q[11] - Q[10], 17) - F(Q[10], Q[9], Q[8]) - Q[7] - 0xffff5bb1;
         x[15] =
           RR(Q[16] - Q[15], 22) - F(Q[15], Q[14], Q[13]) - Q[12] - 0x49b40821;
 
@@ -482,33 +490,36 @@ class Block2Generator {
             x[4] = RR(Q[5] - Q[4], 7) - F(Q[4], Q[3], Q[2]) - Q[1] - 0xf57c0faf;
 
             Q[24] =
-              Q[23] + RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8, 20);
+              Q[23] +
+              RL(G(Q[23], Q[22], Q[21]) + Q[20] + x[4] + 0xe7d3fbc8, 20);
 
             // Q[24] =  1...  ....  ....  ....  ....  ....  ....  ....
             if (bit(Q[24], 32) != 1) continue;
 
             x[3] = RR(Q[4] - Q[3], 22) - F(Q[3], Q[2], Q[1]) - QM0 - 0xc1bdceee;
-            x[7] = RR(Q[8] - Q[7], 22) - F(Q[7], Q[6], Q[5]) - Q[4] - 0xfd469501;
+            x[7] =
+              RR(Q[8] - Q[7], 22) - F(Q[7], Q[6], Q[5]) - Q[4] - 0xfd469501;
 
             ///////////////////////////////////////////////////////////////
             ///                       Tunnel Q9                          //
             ///////////////////////////////////////////////////////////////
             // Tunnel Q9 - 8 bits
-            for (
-              itr_q9 = itr_q9_start;
-              itr_q9 < itr_q9_end;
-              itr_q9++
-            ) {
+            for (itr_q9 = itr_q9_start; itr_q9 < itr_q9_end; itr_q9++) {
               Q[9] = tmp_q9 ^ mask_Q9[USE_B2_Q9 ? itr_q9 : 0];
 
-              x[8] = RR(Q[9] - Q[8], 7) - F(Q[8], Q[7], Q[6]) - Q[5] - 0x698098d8;
+              x[8] =
+                RR(Q[9] - Q[8], 7) - F(Q[8], Q[7], Q[6]) - Q[5] - 0x698098d8;
               x[9] =
                 RR(Q[10] - Q[9], 12) - F(Q[9], Q[8], Q[7]) - Q[6] - 0x8b44f7af;
               x[12] =
-                RR(Q[13] - Q[12], 7) - F(Q[12], Q[11], Q[10]) - Q[9] - 0x6b901122;
+                RR(Q[13] - Q[12], 7) -
+                F(Q[12], Q[11], Q[10]) -
+                Q[9] -
+                0x6b901122;
 
               Q[25] =
-                Q[24] + RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[9] + 0x21e1cde6, 5);
+                Q[24] +
+                RL(G(Q[24], Q[23], Q[22]) + Q[21] + x[9] + 0x21e1cde6, 5);
               Q[26] =
                 Q[25] +
                 RL(G(Q[25], Q[24], Q[23]) + Q[22] + x[14] + 0xc33707d6, 9);
@@ -522,7 +533,8 @@ class Block2Generator {
                 Q[28] +
                 RL(G(Q[28], Q[27], Q[26]) + Q[25] + x[13] + 0xa9e3e905, 5);
               Q[30] =
-                Q[29] + RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[2] + 0xfcefa3f8, 9);
+                Q[29] +
+                RL(G(Q[29], Q[28], Q[27]) + Q[26] + x[2] + 0xfcefa3f8, 9);
               Q[31] =
                 Q[30] +
                 RL(G(Q[30], Q[29], Q[28]) + Q[27] + x[7] + 0x676f02d9, 14);
@@ -530,13 +542,15 @@ class Block2Generator {
                 Q[31] +
                 RL(G(Q[31], Q[30], Q[29]) + Q[28] + x[12] + 0x8d2a4c8a, 20);
               Q[33] =
-                Q[32] + RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[5] + 0xfffa3942, 4);
+                Q[32] +
+                RL(H(Q[32], Q[31], Q[30]) + Q[29] + x[5] + 0xfffa3942, 4);
               Q[34] =
                 Q[33] +
                 RL(H(Q[33], Q[32], Q[31]) + Q[30] + x[8] + 0x8771f681, 11);
 
               // Extra conditions: Σ35,16 = 1
-              const sigma_Q35 = H(Q[34], Q[33], Q[32]) + Q[31] + x[11] + 0x6d9d6122;
+              const sigma_Q35 =
+                H(Q[34], Q[33], Q[32]) + Q[31] + x[11] + 0x6d9d6122;
               if (bit(sigma_Q35, 16) != 1) continue;
 
               Q[35] = Q[34] + RL(sigma_Q35, 16);
@@ -545,7 +559,8 @@ class Block2Generator {
                 Q[35] +
                 RL(H(Q[35], Q[34], Q[33]) + Q[32] + x[14] + 0xfde5380c, 23);
               Q[37] =
-                Q[36] + RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[1] + 0xa4beea44, 4);
+                Q[36] +
+                RL(H(Q[36], Q[35], Q[34]) + Q[33] + x[1] + 0xa4beea44, 4);
               Q[38] =
                 Q[37] +
                 RL(H(Q[37], Q[36], Q[35]) + Q[34] + x[4] + 0x4bdecfa9, 11);
@@ -568,7 +583,8 @@ class Block2Generator {
                 Q[43] +
                 RL(H(Q[43], Q[42], Q[41]) + Q[40] + x[6] + 0x04881d05, 23);
               Q[45] =
-                Q[44] + RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[9] + 0xd9d4d039, 4);
+                Q[44] +
+                RL(H(Q[44], Q[43], Q[42]) + Q[41] + x[9] + 0xd9d4d039, 4);
               Q[46] =
                 Q[45] +
                 RL(H(Q[45], Q[44], Q[43]) + Q[42] + x[12] + 0xe6db99e5, 11);
@@ -666,7 +682,8 @@ class Block2Generator {
 
               // Extra conditions: Σ62,16 ~ Σ62,22 not all 0
               // 0x003f8000 =  0000 0000 0011 1111 1000 0000 0000 0000
-              const sigma_Q62 = fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
+              const sigma_Q62 =
+                fI(Q[61], Q[60], Q[59]) + Q[58] + x[11] + 0xbd3af235;
               if ((sigma_Q62 & 0x003f8000) == 0) continue;
 
               Q[62] = Q[61] + RL(sigma_Q62, 10);
@@ -698,7 +715,6 @@ class Block2Generator {
               const BB0 = this.B0 + Q[64];
               const CC0 = this.C0 + Q[63];
               const DD0 = this.D0 + Q[62];
-              console.log('X in', stub.X, itr_q1q2, itr_q16);
 
               let obj = createMD5Object();
               let { Hx } = obj;
@@ -726,8 +742,9 @@ class Block2Generator {
                 (BB1 - BB0) >>> 0 != 0 ||
                 (CC1 - CC0) >>> 0 != 0 ||
                 (DD1 - DD0) >>> 0 != 0
-              )
+              ) {
                 continue;
+              }
 
               // We have now found a collision!!
 
@@ -736,8 +753,7 @@ class Block2Generator {
               const B0 = BB0;
               const C0 = CC0;
               const D0 = DD0;
-              // console.log("A0", A0 >>> 0);
-              //
+
               const v1 = [...this.v1];
               const v2 = [...this.v2];
 
@@ -746,14 +762,27 @@ class Block2Generator {
                 memcpy(v1, 64 + i * 4, x, i, 4);
                 memcpy(v2, 64 + i * 4, Hx, i, 4);
               }
-              return {
-                v1, v2, A0, B0, C0, D0
-              };
+              return { v1, v2, A0, B0, C0, D0 };
             } // End of Tunnel Q9
           } // End of MMMM Q4
         } // End of MMMM Q1/12
       } // End of MMMM Q16
     } // End of general for
     return undefined; // Collision not found
+  }
+
+  determineTunnelValues(x, y, output) {
+    let id = (x + y * 256) >>> 0;
+    const Q4_strength = 6;
+    const startQ4 = id & ((1 << Q4_strength) - 1);
+    id = id >>> Q4_strength;
+    const Q9_strength = 8;
+    const startQ9 = id & ((1 << Q9_strength) - 1);
+    id = id >>> Q9_strength;
+    const values = {
+      startQ4,
+      startQ9,
+    };
+    return values;
   }
 }

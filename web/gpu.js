@@ -147,8 +147,6 @@ class Renderer {
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     // Clear the color buffer with specified clear color
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    console.log(this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION));
-
     const shared = getSourceSynch("shared.fs");
     const vshader = getSourceSynch("vshader.vs");
     const fshader = shared + getSourceSynch("fshaderblock1.fs");
@@ -164,21 +162,6 @@ class Renderer {
         ),
       },
       uniformLocations: this.getUniforms(["seed"], this.gl, this.shaderProgram),
-      // uniformLocations: {
-      //   // projectionMatrix: gl.getUniformLocation(
-      //   //   shaderProgram,
-      //   //   "uProjectionMatrix"
-      //   // ),
-      //   seed: this.gl.getUniformLocation(this.shaderProgram, "seed"),
-      //   // A0: this.gl.getUniformLocation(this.shaderProgram, "A0"),
-      //   // B0: this.gl.getUniformLocation(this.shaderProgram, "B0"),
-      //   // C0: this.gl.getUniformLocation(this.shaderProgram, "C0"),
-      //   // D0: this.gl.getUniformLocation(this.shaderProgram, "D0"),
-      //   // A1: this.gl.getUniformLocation(this.shaderProgram, "A1"),
-      //   // B1: this.gl.getUniformLocation(this.shaderProgram, "B1"),
-      //   // C1: this.gl.getUniformLocation(this.shaderProgram, "C1"),
-      //   // D1: this.gl.getUniformLocation(this.shaderProgram, "D1"),
-      // },
     };
 
     this.programInfo2 = {
@@ -329,64 +312,31 @@ class Renderer {
       startQ14,
       NUM_BITS_Q16: this.NUM_BITS_Q16,
     };
-    // console.time("block 1 collision");
     const block1 = Block1(input);
     if (!block1) {
       console.error("first block collision not found on the CPU");
     }
     return block1;
-    // console.timeEnd("block 1 collision");
-    // console.time('block 2 collision');
-    // console.timeEnd('block 2 collision');
-    // const a = String.fromCharCode(...v1)
-    // const b = String.fromCharCode(...v2)
-    // newBlock1(a, b);
   }
 
   determineTunnelValues2(x, y, output) {
-    let id = (x + y * 256) >>> 0;
-
-    const Q4_strength = 6;
-    const startQ4 = id & ((1 << Q4_strength) - 1);
-    id = id >>> Q4_strength;
-
-    const Q9_strength = 8;
-    const startQ9 = id & ((1 << Q9_strength) - 1);
-    id = id >>> Q9_strength;
-    const skip_rng = ((id) & 3) >>> 0;
-    const input = {
-      id,
-      startQ4,
-      startQ9,
-      skip_rng,
-      rng: this.block2generator.X,
-    };
-    X = this.block2seed >>> 0;
-    // console.time("block 2 collision");
-    // TODO generate multiple blocks at a time from different collisions
-    // const block2 = Block2(input);
+    const {startQ4, startQ9} = this.block2generator.determineTunnelValues(x, y, output);
     const block2 = this.block2generator.getCollision(startQ4, startQ9, this.NUM_BITS_Q16);
-    console.log(block2);
     if (!block2) {
-      console.error("collision block 2 not found on cpu", input);
-      return;
+      console.error("collision block 2 not found on cpu", {x, y, output, startQ4, startQ9});
+      return false;
     }
     this.fullCollisions += 1;
-    // console.timeEnd("block 2 collision");
-    // console.time('block 2 collision');
-    // console.log('collision block 2', Block2());
-    // console.timeEnd('block 2 collision');
     const a = String.fromCharCode(...block2.v1);
     const b = String.fromCharCode(...block2.v2);
-
-    this.block2generator.calculateHash(block2);
-    return input;
+    const hash = this.block2generator.calculateHash(block2);
+    newCollision(a, b, block2.v1, block2.v2, hash)
   }
+
   readFrame(seed) {
     this.frames += 1;
     const width = 256;
     const height = 256;
-    const oldLast = this.last;
     let goToNextBlock = false;
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
@@ -411,6 +361,7 @@ class Renderer {
         }
       }
     }
+
     if(goToNextBlock) {
       this.firstBlocks.pop();
     }
