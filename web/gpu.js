@@ -227,7 +227,7 @@ class Renderer {
       let seed2 = this.block2seed;
       if (this.counter == 0) {
         const block1 = this.determineTunnelValues(x, y, v, seed);
-        this.block2seed = X >>> 0;
+        this.block2seed = block1.X >>> 0;
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);

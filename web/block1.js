@@ -967,6 +967,7 @@ function Block1(input, rngMask) {
                   B1,
                   C1,
                   D1,
+                  X: candidateGenerator.X
                 };
               } // End of Q9 Tunnel
             } // End of Q4 Tunnel
