@@ -126,7 +126,7 @@ function drawScene(gl, programInfo, buffers) {
 function frame() {}
 
 class Renderer {
-  constructor(seed) {
+  constructor(seed, rngMask) {
     const canvas = document.getElementById("canvas");
     this.gl = canvas.getContext("webgl2");
     this.gl.imageSmoothingEnabled = false;
@@ -140,6 +140,7 @@ class Renderer {
     const fshader2 = shared + getSourceSynch("fshaderblock2.fs");
     this.shaderProgram = initShaderProgram(this.gl, vshader, fshader);
     this.shaderProgram2 = initShaderProgram(this.gl, vshader, fshader2);
+    this.rngMask = rngMask;
     this.programInfo = {
       program: this.shaderProgram,
       attribLocations: {
@@ -148,7 +149,7 @@ class Renderer {
           "vertexPosition"
         ),
       },
-      uniformLocations: this.getUniforms(["seed"], this.gl, this.shaderProgram),
+      uniformLocations: this.getUniforms(["seed", "rngMask"], this.gl, this.shaderProgram),
     };
 
     this.programInfo2 = {
@@ -172,14 +173,15 @@ class Renderer {
           "D1",
           "NUM_BITS_Q16",
           "seed2",
+          "rngMask",
         ],
         this.gl,
         this.shaderProgram2
       ),
     };
     this.quad = initBuffers(this.gl);
-    this.generator = new Block1CandidatesGenerator(seed);
-    this.block2generator = new Block2Generator();
+    this.generator = new Block1CandidatesGenerator(seed, this.rngMask);
+    this.block2generator = new Block2Generator(this.rngMask);
     this.firstBlocks = [];
     this.fullCollisions = 0;
     this.pixelValues = new Uint8Array(256 * 256 * 4);
@@ -229,11 +231,12 @@ class Renderer {
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);
-        console.log('seed', (seed >>> 0).toString(16));
+        console.log('seed', seed >>> 0, seed.toString(16));
         this.loadUniforms1ui(programInfo.uniformLocations, {
           seed: this.block2seed,
           NUM_BITS_Q16: this.NUM_BITS_Q16,
           ...this.block2generator,
+          rngMask: this.rngMask
         });
       } else {
         if (this.block2generator.step2(this.NUM_BITS_Q16)) {
@@ -261,10 +264,9 @@ class Renderer {
       } else {
         console.warn("found no candidate");
       }
-      this.gl.uniform1ui(
-        this.programInfo.uniformLocations.block,
-        this.block >>> 0
-      );
+      this.loadUniforms1ui(this.programInfo.uniformLocations, {
+        rngMask: this.rngMask,
+      });
     }
     setSelectedBlock(this.block);
   }
@@ -304,7 +306,7 @@ class Renderer {
       startQ14,
       NUM_BITS_Q16: this.NUM_BITS_Q16,
     };
-    const block1 = Block1(input);
+    const block1 = Block1(input, this.rngMask);
     if (!block1) {
       console.error("first block collision not found on the CPU");
     }
@@ -455,10 +457,14 @@ function shouldGoToNextBlock() {
 document.getElementById("gpu").addEventListener("click", function () {
   if (!renderer) {
     const seedElement = document.getElementById("seed");
-    seed = parseInt(seedElement.value, 16);
+    const seed = parseInt(seedElement.value, 16);
+    const rngMask = document.getElementById("rng-mask");
+    const mask = parseInt(rngMask.value || rngMask.placeholder, 16);
     seedElement.setAttribute("disabled", true);
-    console.log(seed >>> 0);
-    renderer = new Renderer(seed);
+    rngMask.setAttribute("disabled", true);
+    console.log("seed", seed >>> 0, seed.toString(16));
+    console.log("mask", mask >>> 0, mask.toString(16));
+    renderer = new Renderer(seed, mask);
     renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
   if (renderer && !renderer.paused()) {

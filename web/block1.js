@@ -39,17 +39,18 @@ const Q14_strength = 9;
 const mask_Q14 = generate_mask(Q14_strength, Q14_mask_bits);
 
 class Block1CandidatesGenerator {
-  constructor(seed) {
+  constructor(seed, rngMask) {
     this.X = seed;
     this.Q = newArray(65);
     this.x = newArray(16);
+    this.rngMask = rngMask;
   }
 
   rng() {
     this.X = (1664525 * this.X + 1013904223) & 0xffffffff;
     //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
 
-    return this.X;
+    return this.X & this.rngMask;
   }
 
   getnext(max_iterations) {
@@ -281,7 +282,7 @@ class Block1CandidatesGenerator {
   }
 }
 
-function Block1(input) {
+function Block1(input, rngMask) {
   const IV1 = 0x67452301;
   const IV2 = 0xefcdab89;
   const IV3 = 0x98badcfe;
@@ -337,15 +338,14 @@ function Block1(input) {
   const QM1 = IV3;
   const QM2 = IV4;
 
-  let candidateGenerator = new Block1CandidatesGenerator(seed);
+  let candidateGenerator = new Block1CandidatesGenerator(seed, rngMask);
 
   // Start block 1 generation.
   // TO-DO: add a time limit for collision search.
   for (let it = 0; it < 1; it++) {
-    let candidate = candidateGenerator.getnext(10000);
-    X = candidateGenerator.X;
-    // console.log('X', X >>> 0);
+    let candidate = candidateGenerator.getnext(2);
     if (!candidate) {
+      console.warn('no candidate found');
       return -1;
     }
     // console.log('seed', candidate.seed >>> 0);
