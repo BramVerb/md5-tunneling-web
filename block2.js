@@ -1,5 +1,5 @@
 class Block2Generator {
-  constructor() {
+  constructor(rngMask) {
     this.Q = newArray(65);
     this.x = newArray(16);
     this.Q9_mask_bits = [3, 4, 5, 11, 19, 21, 22, 23];
@@ -10,13 +10,14 @@ class Block2Generator {
     this.Q4_mask_bits = [14, 15, 16, 23, 24, 25];
     this.Q4_strength = 6;
     this.mask_Q4 = generate_mask(this.Q4_strength, this.Q4_mask_bits);
+    this.rngMask = rngMask;
   }
 
   rng() {
     this.X = (1664525 * this.X + 1013904223) & 0xffffffff;
     //X = (((((1103515245 >>> 0) * X >>>0) + 12345)>>>0) & 0xffffffff) >>> 0;
 
-    return this.X;
+    return this.X & this.rngMask;
   }
 
   initBlock1(block1) {
@@ -301,7 +302,7 @@ class Block2Generator {
     const x = [...this.x];
 
     // TODO different way?
-    const stub = { X: this.X };
+    const stub = { X: this.X, rngMask: this.rngMask };
     const rng = this.rng.bind(stub);
 
     let i = 0,

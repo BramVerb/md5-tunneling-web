@@ -7,6 +7,7 @@ out highp vec4 color;
 #define pow2(a) (1u << a)
 
 uniform highp uint seed;
+uniform highp uint rngMask;
 
 uniform highp uint A0;
 uniform highp uint B0;
@@ -85,7 +86,7 @@ u32 X;
 u32 rng() {
   X = (1664525u*X + 1013904223u) & 0xffffffffu;
   /* X = (1103515245u*X + 12345u) & 0xffffffffu; */
-  return X;
+  return X & rngMask;
 }
 
 void HMD5Tr() {
