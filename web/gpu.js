@@ -148,7 +148,11 @@ class Renderer {
           "vertexPosition"
         ),
       },
-      uniformLocations: this.getUniforms(["seed", "rngMask"], this.gl, this.shaderProgram),
+      uniformLocations: this.getUniforms(
+        ["seed", "rngMask"],
+        this.gl,
+        this.shaderProgram
+      ),
     };
 
     this.programInfo2 = {
@@ -200,23 +204,25 @@ class Renderer {
       block1: 0,
       block2: 0,
     };
-    this.backend = this.getGPUInfo()
+    this.backend = this.getGPUInfo();
     updateStats({
       renderer: this.backend.renderer,
       vendor: this.backend.vendor,
-    })
+    });
   }
 
   getGPUInfo() {
-  const ext = this.gl.getExtension('WEBGL_debug_renderer_info');
-  return ext ? {
-    vendor: this.gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),
-    renderer: this.gl.getParameter(ext.UNMASKED_RENDERER_WEBGL),
-  } : { 
-    vendor: "unknown",
-    renderer: "unknown",
-  };
-}
+    const ext = this.gl.getExtension("WEBGL_debug_renderer_info");
+    return ext
+      ? {
+          vendor: this.gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),
+          renderer: this.gl.getParameter(ext.UNMASKED_RENDERER_WEBGL),
+        }
+      : {
+          vendor: "unknown",
+          renderer: "unknown",
+        };
+  }
 
   getUniforms(uniformNames, gl, shaderProgram) {
     const uniforms = {};
@@ -247,12 +253,13 @@ class Renderer {
         seed2 = this.block2seed;
         this.block2generator.initBlock1(block1);
         this.block2generator.iteration(this.block2seed);
-        console.log('seed', seed >>> 0, seed.toString(16));
+        console.log("seed", seed >>> 0, seed.toString(16));
+        // this.NUM_BITS_Q16 = 24 - this.block2generator.Q1Q2_strength;
         this.loadUniforms1ui(programInfo.uniformLocations, {
           seed: this.block2seed,
           NUM_BITS_Q16: this.NUM_BITS_Q16,
           ...this.block2generator,
-          rngMask: this.rngMask
+          rngMask: this.rngMask,
         });
       } else {
         if (this.block2generator.step2(this.NUM_BITS_Q16)) {
@@ -376,9 +383,15 @@ class Renderer {
         }
         if (v > 0) {
           this.last = Date.now();
-          if (this.block === 1) {
+          if (
+            this.block === 1 &&
+            (this.firstBlocks.length == 0 || !this.goToNextBlockWhenFound)
+          ) {
             this.firstBlocks.push({ x, y, v, seed });
-          } else if (this.block === 2 && (!goToNextBlock||!this.goToNextBlockWhenFound)) {
+          } else if (
+            this.block === 2 &&
+            (!goToNextBlock || !this.goToNextBlockWhenFound)
+          ) {
             goToNextBlock = true;
             this.determineTunnelValues2(x, y, v);
           }
@@ -441,7 +454,7 @@ class Renderer {
     const took = Date.now() - start;
     this.blockTime["block" + this.block] += took;
     this.blockCount["block" + this.block] += 1;
-    if(this.stopAfter == 0 || this.fullCollisions < this.stopAfter) {
+    if (this.stopAfter == 0 || this.fullCollisions < this.stopAfter) {
       this.animationFrame = requestAnimationFrame(this.frame.bind(this));
     } else {
       requestAnimationFrame(() => {
@@ -478,9 +491,9 @@ document.getElementById("gpu").addEventListener("click", function () {
     const seed = parseInt(seedElement.value, 16);
     const rngMask = document.getElementById("rng-mask");
     const mask = parseInt(rngMask.value || rngMask.placeholder, 16);
-    const bitsElement = document.getElementById('bits-q16');
+    const bitsElement = document.getElementById("bits-q16");
     const bitsQ16 = parseInt(bitsElement.value, 10);
-    const stopAfterElement = document.getElementById('stop-after');
+    const stopAfterElement = document.getElementById("stop-after");
     const stopAfter = parseInt(stopAfterElement.value, 10);
     seedElement.setAttribute("disabled", true);
     rngMask.setAttribute("disabled", true);
@@ -500,11 +513,13 @@ document.getElementById("gpu").addEventListener("click", function () {
   }
 });
 
-document.getElementById("goToNextBlockWhenFound").addEventListener('change', function () {
-  if(renderer) {
-    renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
-  }
-});
+document
+  .getElementById("goToNextBlockWhenFound")
+  .addEventListener("change", function () {
+    if (renderer) {
+      renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
+    }
+  });
 
 function bottom() {
   document.getElementById("bottom").scrollIntoView({ behavior: "smooth" });
