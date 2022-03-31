@@ -362,7 +362,7 @@ class Renderer {
           this.last = Date.now();
           if (this.block === 1) {
             this.firstBlocks.push({ x, y, v, seed });
-          } else if (this.block === 2) {
+          } else if (this.block === 2 && (!goToNextBlock||!this.goToNextBlockWhenFound)) {
             goToNextBlock = true;
             this.determineTunnelValues2(x, y, v);
           }
@@ -428,7 +428,9 @@ class Renderer {
     if(this.stopAfter == 0 || this.fullCollisions < this.stopAfter) {
       this.animationFrame = requestAnimationFrame(this.frame.bind(this));
     } else {
-      window.alert(`DONE WITH ${this.fullCollisions} collisions`);
+      requestAnimationFrame(() => {
+        window.alert(`DONE WITH ${this.fullCollisions} collisions`);
+      });
     }
   }
 
