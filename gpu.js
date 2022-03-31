@@ -200,7 +200,23 @@ class Renderer {
       block1: 0,
       block2: 0,
     };
+    this.backend = this.getGPUInfo()
+    updateStats({
+      renderer: this.backend.renderer,
+      vendor: this.backend.vendor,
+    })
   }
+
+  getGPUInfo() {
+  const ext = this.gl.getExtension('WEBGL_debug_renderer_info');
+  return ext ? {
+    vendor: this.gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),
+    renderer: this.gl.getParameter(ext.UNMASKED_RENDERER_WEBGL),
+  } : { 
+    vendor: "unknown",
+    renderer: "unknown",
+  };
+}
 
   getUniforms(uniformNames, gl, shaderProgram) {
     const uniforms = {};
