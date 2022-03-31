@@ -190,9 +190,7 @@ class Block2Generator {
     const rng = this.rng.bind(this);
     const Q = this.Q;
     const x = this.x;
-    // if (this.doneStep >= Math.pow(2, NUM_BITS_Q16+6)) {
-    if (this.doneStep >= Math.pow(2, Math.min(25, NUM_BITS_Q16 + 6))) {
-    // if (this.doneStep >= Math.pow(2, 25)) {
+    if (this.doneStep >= Math.pow(2, 20)) {
       console.warn("giving up on the second block");
       return false;
     }

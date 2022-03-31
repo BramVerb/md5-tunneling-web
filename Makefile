@@ -1,2 +1,2 @@
 compile:
-	gcc tunneling.c -lm -O3 -o md5-tunneling
+	gcc tunneling.c -lm -O4 -o md5-tunneling
