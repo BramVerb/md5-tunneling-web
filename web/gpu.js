@@ -1,4 +1,3 @@
-const nCollisions = 1000000;
 //
 // creates a shader of the given type, uploads the source and
 // compiles it.
@@ -126,7 +125,7 @@ function drawScene(gl, programInfo, buffers) {
 function frame() {}
 
 class Renderer {
-  constructor(seed, rngMask) {
+  constructor(seed, rngMask, bitsQ16, stopAfter) {
     const canvas = document.getElementById("canvas");
     this.gl = canvas.getContext("webgl2");
     this.gl.imageSmoothingEnabled = false;
@@ -190,8 +189,9 @@ class Renderer {
     this.last = Date.now();
     this.frames = 0;
     this.next = this.generator.getnext(100000);
-    this.NUM_BITS_Q16 = 11;
+    this.NUM_BITS_Q16 = bitsQ16;
     this.counter = 0;
+    this.stopAfter = stopAfter;
     this.blockTime = {
       block1: 0,
       block2: 0,
@@ -373,7 +373,7 @@ class Renderer {
     if (goToNextBlock && this.goToNextBlockWhenFound) {
       this.firstBlocks.pop();
     }
-    if (this.frames % 20 == 0 || this.fullCollisions >= nCollisions) {
+    if (this.frames % 20 == 0 || this.fullCollisions >= this.stopAfter) {
       const seconds = (Date.now() - this.startTime) / 1000;
       updateStats({
         cps: (this.fullCollisions / seconds).toFixed(1),
@@ -425,10 +425,10 @@ class Renderer {
     const took = Date.now() - start;
     this.blockTime["block" + this.block] += took;
     this.blockCount["block" + this.block] += 1;
-    if(this.fullCollisions <= nCollisions) {
+    if(this.stopAfter == 0 || this.fullCollisions < this.stopAfter) {
       this.animationFrame = requestAnimationFrame(this.frame.bind(this));
     } else {
-      console.log("DONE WITH ", this.fullCollisions, "collisions");
+      window.alert(`DONE WITH ${this.fullCollisions} collisions`);
     }
   }
 
@@ -460,11 +460,17 @@ document.getElementById("gpu").addEventListener("click", function () {
     const seed = parseInt(seedElement.value, 16);
     const rngMask = document.getElementById("rng-mask");
     const mask = parseInt(rngMask.value || rngMask.placeholder, 16);
+    const bitsElement = document.getElementById('bits-q16');
+    const bitsQ16 = parseInt(bitsElement.value, 10);
+    const stopAfterElement = document.getElementById('stop-after');
+    const stopAfter = parseInt(stopAfterElement.value, 10);
     seedElement.setAttribute("disabled", true);
     rngMask.setAttribute("disabled", true);
+    bitsElement.setAttribute("disabled", true);
+    stopAfterElement.setAttribute("disabled", true);
     console.log("seed", seed >>> 0, seed.toString(16));
     console.log("mask", mask >>> 0, mask.toString(16));
-    renderer = new Renderer(seed, mask);
+    renderer = new Renderer(seed, mask, bitsQ16, stopAfter);
     renderer.goToNextBlockWhenFound = shouldGoToNextBlock();
   }
   if (renderer && !renderer.paused()) {
