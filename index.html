@@ -19,17 +19,17 @@
       <h2 class="active" id="inputs">Inputs</h2>
       <label for="seed"
              >Seed (in hex)
-             <input id="seed" type="text" value="4" />
-      </label> <button id="gpu">Start</button>
+             <input id="seed" type="text" value="F8B82788" />
+      </label>
       </br>
       <label for="showcontent"
              >Show content of collisions
-             <input id="showcontent" type="checkbox" value="true" />
+             <input id="showcontent" type="checkbox" />
       </label>
       </br>
       <label for="goToNextBlockWhenFound"
              >Generate a new first block when a collision is found
-             <input id="goToNextBlockWhenFound" type="checkbox" value="false" />
+             <input id="goToNextBlockWhenFound" type="checkbox" />
       </label>
       </br>
       <label for="rng-mask"
@@ -37,6 +37,17 @@
              0x<input id="rng-mask" type="text" value="FFFFFFFF" placeholder="FFFFFFFF" size="8"/>
       </label>
       </br>
+      <label for="bits-q16"
+             >NUM_BITS_Q16
+             <input id="bits-q16" type="number" min="0", max="25" value="12"/>
+      </label>
+      </br>
+      <label for="stop-after"
+             >Stop after finding
+             <input id="stop-after" type="number" min="0", value="1000"/> collisions
+      </label>
+      </br>
+      <button id="gpu">Start</button>
     </section>
     <section>
       <h2>Output</h2>
