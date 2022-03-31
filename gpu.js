@@ -208,6 +208,7 @@ class Renderer {
     updateStats({
       renderer: this.backend.renderer,
       vendor: this.backend.vendor,
+      webgl: this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION),
     });
   }
 
