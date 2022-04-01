@@ -222,8 +222,8 @@ uint32_t mix(uint32_t a) {
 //Random number generator. We will use an LCG pseudo random generator. Different options are possible
 uint32_t X;
 uint32_t rng( void ) {
-  //X = (1664525*X + 1013904223) & 0xffffffff;
-  X = (1103515245*X + 12345) & 0xffffffff;
+  X = (1664525*X + 1013904223) & 0xffffffff;
+  /* X = (1103515245*X + 12345) & 0xffffffff; */
   return X;
 }
 
