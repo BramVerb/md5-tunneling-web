@@ -309,7 +309,7 @@ function Block1() {
 
   // Start block 1 generation.
   // TO-DO: add a time limit for collision search.
-  for (let it = 0; it < 100000; it++) {
+  for (;;) {
     // console.log(`${it}: ${X>>>0}`);
     // Q[1]  = .... .... .... .... .... .... .... ....
     // RNG   = **** **** **** **** **** **** **** ****  0xffffffff
